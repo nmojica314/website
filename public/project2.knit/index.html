@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Nicolette Mojica" />
+    <meta name="description" content="Welcome, friends!">
+    <link rel="shortcut icon" type="image/x-icon" href="/img/favicon.ico">
+    <title>Project 2 - NSM724</title>
+    <meta name="generator" content="Hugo 0.60.1" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="/css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old" />
+    
+    <!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    
+  </head>
+
+  <body>
+    <div id="wrap">
+
+      
+      <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="/"><i class="fa fa-home"></i></a>
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="navbar-collapse collapse" id="navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+        <li><a href="/blog/">BLOG</a></li>
+        
+        <li><a href="/projects/">PROJECTS</a></li>
+        
+        <li><a href="/resume/">RESUME</a></li>
+        
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+
+      
+      <div class="container">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="/project2.knit/">Project 2 - NSM724</a></strong>
+          </h3>
+        </div>
+        <div class="blog-title">
+          <h4>
+          January 1, 0001
+            &nbsp;&nbsp;
+            
+          </h4>
+        </div>
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              <h2 id="introduction">Introduction</h2>
+<p>I will be using the same dataset that I created for project 1 with the addition of a population variable. This is a dataset that compares countries&rsquo; alcohol consumption and percentage of GDP spent on healthcare, as well as their population. The &ldquo;liters&rdquo; variable shows the liters of pure alcohol consumed per capita for each country. The &ldquo;type&rdquo; and &ldquo;servings&rdquo; variables go together. The servings variable indicates the number of servings of a certain type of alcohol each country drinks per capita and the type variable indicates the type of alcohol that the servings variable is referring to. The GDP_pct variable shows the percentage of the GDP that a country spends on healthcare ever year. The region variable splits countries into these regions: East Asia and Pacific, Europe and Central Asia, Latin America and Carribbean, Middle East and North Africa, North America, South Asia, and Sub-Saharan Africa.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">library</span>(tidyverse)
+</code></pre></div><pre><code>## ── Attaching packages ───────────────────────────────────────────── tidyverse 1.3.0 ──
+</code></pre><pre><code>## ✓ ggplot2 3.2.1     ✓ purrr   0.3.3
+## ✓ tibble  2.1.3     ✓ dplyr   0.8.3
+## ✓ tidyr   1.0.0     ✓ stringr 1.4.0
+## ✓ readr   1.3.1     ✓ forcats 0.4.0
+</code></pre><pre><code>## ── Conflicts ──────────────────────────────────────────────── tidyverse_conflicts() ──
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">library</span>(fivethirtyeight)
+<span style="color:#a6e22e">library</span>(readxl)
+healthgdp <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">read_excel</span>(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">~/Desktop/gdp data2.xlsx&#34;</span>)
+pop<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">read_excel</span>(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">~/Desktop/country data.xls&#34;</span>)
+drinks<span style="color:#f92672">&lt;-</span>drinks<span style="color:#f92672">%&gt;%</span><span style="color:#a6e22e">rename</span>(
+    beer <span style="color:#f92672">=</span> beer_servings,
+    wine <span style="color:#f92672">=</span> wine_servings,
+    spirit <span style="color:#f92672">=</span> spirit_servings,
+    liters<span style="color:#f92672">=</span>total_litres_of_pure_alcohol
+    )
+drinks<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">pivot_longer</span>(drinks,<span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">beer&#34;</span>,<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">spirit&#34;</span>,<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">wine&#34;</span>),names_to <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">type&#34;</span>,values_to <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">servings&#34;</span>)
+project2<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">left_join</span>(drinks,healthgdp)
+</code></pre></div><pre><code>## Joining, by = &quot;country&quot;
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">project2<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">left_join</span>(project2,pop)
+</code></pre></div><pre><code>## Joining, by = &quot;country&quot;
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">head</span>(project2)
+</code></pre></div><pre><code>## # A tibble: 6 x 7
+##   country     liters type   servings GDP_pct region                population
+##   &lt;chr&gt;        &lt;dbl&gt; &lt;chr&gt;     &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                      &lt;dbl&gt;
+## 1 Afghanistan    0   beer          0    8.57 South Asia              29185507
+## 2 Afghanistan    0   spirit        0    8.57 South Asia              29185507
+## 3 Afghanistan    0   wine          0    8.57 South Asia              29185507
+## 4 Albania        4.9 beer         89    5.01 Europe &amp; Central Asia    2913021
+## 5 Albania        4.9 spirit      132    5.01 Europe &amp; Central Asia    2913021
+## 6 Albania        4.9 wine         54    5.01 Europe &amp; Central Asia    2913021
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">project2<span style="color:#f92672">%&gt;%</span><span style="color:#a6e22e">summarise</span>(<span style="color:#a6e22e">mean</span>(liters))
+</code></pre></div><pre><code>## # A tibble: 1 x 1
+##   `mean(liters)`
+##            &lt;dbl&gt;
+## 1           4.72
+</code></pre><p>The mean liters of alcohol consumed per capita is 4.717098 so I will create a new binary variable that distinguishes countries that drink more liters than the mean (high consumption) and countries that drink less than the mean (low consumption). Low consumption will be assigned a 0 and high consumption will be a 1.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">project2<span style="color:#f92672">&lt;-</span>project2<span style="color:#f92672">%&gt;%</span><span style="color:#a6e22e">mutate</span>(consumption<span style="color:#f92672">=</span><span style="color:#a6e22e">case_when</span>(liters<span style="color:#f92672">&lt;</span><span style="color:#a6e22e">mean</span>(liters) <span style="color:#f92672">~</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">low&#34;</span>,
+                                                  liters<span style="color:#f92672">&gt;</span><span style="color:#a6e22e">mean</span>(liters) <span style="color:#f92672">~</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">high&#34;</span>))<span style="color:#f92672">%&gt;%</span><span style="color:#a6e22e">mutate</span>(consumption<span style="color:#f92672">=</span><span style="color:#a6e22e">as_factor</span>(consumption))<span style="color:#f92672">%&gt;%</span><span style="color:#a6e22e">mutate</span>(consumption<span style="color:#f92672">=</span><span style="color:#a6e22e">as.numeric</span>(consumption)<span style="color:#ae81ff">-1</span>)
+<span style="color:#a6e22e">head</span>(project2)
+</code></pre></div><pre><code>## # A tibble: 6 x 8
+##   country    liters type  servings GDP_pct region         population consumption
+##   &lt;chr&gt;       &lt;dbl&gt; &lt;chr&gt;    &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               &lt;dbl&gt;       &lt;dbl&gt;
+## 1 Afghanist…    0   beer         0    8.57 South Asia       29185507           0
+## 2 Afghanist…    0   spir…        0    8.57 South Asia       29185507           0
+## 3 Afghanist…    0   wine         0    8.57 South Asia       29185507           0
+## 4 Albania       4.9 beer        89    5.01 Europe &amp; Cent…    2913021           1
+## 5 Albania       4.9 spir…      132    5.01 Europe &amp; Cent…    2913021           1
+## 6 Albania       4.9 wine        54    5.01 Europe &amp; Cent…    2913021           1
+</code></pre><h2 id="manova-and-anova">MANOVA and ANOVA</h2>
+<p>I'm going to test whether any of the numeric variables vary across region.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">man1<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">manova</span>(<span style="color:#a6e22e">cbind</span>(liters,servings,GDP_pct,population)<span style="color:#f92672">~</span>region, data<span style="color:#f92672">=</span>project2)
+<span style="color:#a6e22e">summary</span>(man1)
+</code></pre></div><pre><code>##            Df Pillai approx F num Df den Df    Pr(&gt;F)    
+## region      6  0.604   14.377     24   1940 &lt; 2.2e-16 ***
+## Residuals 485                                            
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+</code></pre><p>It is significant so I will now run univariate ANOVAs to see which variables are significant and post-hoc t-tests to see which regions differ.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">summary.aov</span>(man1)
+</code></pre></div><pre><code>##  Response liters :
+##              Df Sum Sq Mean Sq F value    Pr(&gt;F)    
+## region        6 3277.3  546.22  65.531 &lt; 2.2e-16 ***
+## Residuals   485 4042.7    8.34                      
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+##  Response servings :
+##              Df  Sum Sq Mean Sq F value    Pr(&gt;F)    
+## region        6 1326595  221099  34.644 &lt; 2.2e-16 ***
+## Residuals   485 3095248    6382                      
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+##  Response GDP_pct :
+##              Df Sum Sq Mean Sq F value    Pr(&gt;F)    
+## region        6  508.6  84.767  12.027 1.301e-12 ***
+## Residuals   485 3418.3   7.048                      
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+##  Response population :
+##              Df     Sum Sq    Mean Sq F value    Pr(&gt;F)    
+## region        6 9.7916e+17 1.6319e+17  8.5821 6.997e-09 ***
+## Residuals   485 9.2226e+18 1.9016e+16                      
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## 87 observations deleted due to missingness
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">pairwise.t.test</span>(project2<span style="color:#f92672">$</span>liters,project2<span style="color:#f92672">$</span>region,
+                p.adj<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">none&#34;</span>)
+</code></pre></div><pre><code>## 
+## 	Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  project2$liters and project2$region 
+## 
+##                            East Asia &amp; Pacific Europe &amp; Central Asia
+## Europe &amp; Central Asia      &lt; 2e-16             -                    
+## Latin America &amp; Caribbean  8.1e-10             6.7e-09              
+## Middle East &amp; North Africa 0.00367             &lt; 2e-16              
+## North America              0.00207             0.99497              
+## South Asia                 0.00076             &lt; 2e-16              
+## Sub-Saharan Africa         0.32415             &lt; 2e-16              
+##                            Latin America &amp; Caribbean Middle East &amp; North Africa
+## Europe &amp; Central Asia      -                         -                         
+## Latin America &amp; Caribbean  -                         -                         
+## Middle East &amp; North Africa 2.7e-16                   -                         
+## North America              0.16413                   8.2e-05                   
+## South Asia                 5.7e-14                   0.30844                   
+## Sub-Saharan Africa         3.0e-09                   6.5e-05                   
+##                            North America South Asia
+## Europe &amp; Central Asia      -             -         
+## Latin America &amp; Caribbean  -             -         
+## Middle East &amp; North Africa -             -         
+## North America              -             -         
+## South Asia                 2.3e-05       -         
+## Sub-Saharan Africa         0.00422       3.0e-05   
+## 
+## P value adjustment method: none
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">pairwise.t.test</span>(project2<span style="color:#f92672">$</span>servings,project2<span style="color:#f92672">$</span>region,
+                p.adj<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">none&#34;</span>)
+</code></pre></div><pre><code>## 
+## 	Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  project2$servings and project2$region 
+## 
+##                            East Asia &amp; Pacific Europe &amp; Central Asia
+## Europe &amp; Central Asia      &lt; 2e-16             -                    
+## Latin America &amp; Caribbean  1.2e-05             0.00029              
+## Middle East &amp; North Africa 0.07095             &lt; 2e-16              
+## North America              0.03023             0.91521              
+## South Asia                 0.03046             3.3e-14              
+## Sub-Saharan Africa         0.12501             &lt; 2e-16              
+##                            Latin America &amp; Caribbean Middle East &amp; North Africa
+## Europe &amp; Central Asia      -                         -                         
+## Latin America &amp; Caribbean  -                         -                         
+## Middle East &amp; North Africa 1.8e-08                   -                         
+## North America              0.33216                   0.00692                   
+## South Asia                 2.4e-07                   0.48558                   
+## Sub-Saharan Africa         1.4e-10                   0.51544                   
+##                            North America South Asia
+## Europe &amp; Central Asia      -             -         
+## Latin America &amp; Caribbean  -             -         
+## Middle East &amp; North Africa -             -         
+## North America              -             -         
+## South Asia                 0.00365       -         
+## Sub-Saharan Africa         0.01034       0.20149   
+## 
+## P value adjustment method: none
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">pairwise.t.test</span>(project2<span style="color:#f92672">$</span>GDP_pct,project2<span style="color:#f92672">$</span>region,
+                p.adj<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">none&#34;</span>)
+</code></pre></div><pre><code>## 
+## 	Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  project2$GDP_pct and project2$region 
+## 
+##                            East Asia &amp; Pacific Europe &amp; Central Asia
+## Europe &amp; Central Asia      0.00096             -                    
+## Latin America &amp; Caribbean  0.49368             0.00907              
+## Middle East &amp; North Africa 0.00139             3.9e-10              
+## North America              0.00867             0.06601              
+## South Asia                 0.00598             5.3e-07              
+## Sub-Saharan Africa         0.13982             3.8e-08              
+##                            Latin America &amp; Caribbean Middle East &amp; North Africa
+## Europe &amp; Central Asia      -                         -                         
+## Latin America &amp; Caribbean  -                         -                         
+## Middle East &amp; North Africa 0.00013                   -                         
+## North America              0.01454                   0.00034                   
+## South Asia                 0.00120                   0.83123                   
+## Sub-Saharan Africa         0.02297                   0.02700                   
+##                            North America South Asia
+## Europe &amp; Central Asia      -             -         
+## Latin America &amp; Caribbean  -             -         
+## Middle East &amp; North Africa -             -         
+## North America              -             -         
+## South Asia                 0.00036       -         
+## Sub-Saharan Africa         0.00261       0.05411   
+## 
+## P value adjustment method: none
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">pairwise.t.test</span>(project2<span style="color:#f92672">$</span>population,project2<span style="color:#f92672">$</span>region,
+                p.adj<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">none&#34;</span>)
+</code></pre></div><pre><code>## 
+## 	Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  project2$population and project2$region 
+## 
+##                            East Asia &amp; Pacific Europe &amp; Central Asia
+## Europe &amp; Central Asia      0.00093             -                    
+## Latin America &amp; Caribbean  0.00418             0.91364              
+## Middle East &amp; North Africa 0.00441             0.75376              
+## North America              0.53763             0.84641              
+## South Asia                 0.00019             1.5e-09              
+## Sub-Saharan Africa         0.00122             0.98830              
+##                            Latin America &amp; Caribbean Middle East &amp; North Africa
+## Europe &amp; Central Asia      -                         -                         
+## Latin America &amp; Caribbean  -                         -                         
+## Middle East &amp; North Africa 0.71080                   -                         
+## North America              0.86776                   0.78103                   
+## South Asia                 1.3e-08                   2.8e-08                   
+## Sub-Saharan Africa         0.92547                   0.74924                   
+##                            North America South Asia
+## Europe &amp; Central Asia      -             -         
+## Latin America &amp; Caribbean  -             -         
+## Middle East &amp; North Africa -             -         
+## North America              -             -         
+## South Asia                 0.04234       -         
+## Sub-Saharan Africa         0.84901       2.2e-09   
+## 
+## P value adjustment method: none
+</code></pre><p>One MANOVA, 3 ANOVAs and 63 t-tests were performed, making for a total of 67 tests. The probability of type I error is this number multiplied by 0.05 or 3.35 and the alpha should be adjusted to 0.05/67 or 7.463e-4. After making this adjustment, all of the ANOVA tests are still significant, meaning that there is a difference in mean across regions for all three variables tested.</p>
+<p>For liters, there is a difference between Europe &amp; Central Asia and East Asia &amp; Pacific, Latin America &amp; Caribbean and East Asia &amp; Pacific, Latin America &amp; Caribbean and Europe &amp; Central Asia, Middle East &amp; North Africa and Europe &amp; Central Asia, Middle East &amp; North Africa and Latin America &amp; Caribbean, South Asia and Europe &amp; Central Asia, South Asia and Latin America &amp; Caribbean, Sub-Saharan Africa and Europe &amp; Central Asia, Sub-Saharan Africa and Latin America &amp; Caribbean, North America and Middle East &amp; North Africa, South Asia and North America, Sub-Saharan Africa and Middle East &amp; North Africa, and Sub-Saharan Africa and South Asia.</p>
+<p>For servings, there is a difference between Europe &amp; Central Asia and East Asia &amp; Pacific, Latin America &amp; Caribbean and East Asia &amp; Pacific, Latin America &amp; Caribbean and Europe &amp; Central Asia, Middle East &amp; North Africa and Europe &amp; Central Asia, Middle East &amp; North Africa and Latin America &amp; Caribbean, South Asia and Europe &amp; Central Asia, South Asia and Latin America &amp; Caribbean, Sub-Saharan Africa and Europe &amp; Central Asia, and Sub-Saharan Africa and Latin America &amp; Caribbean</p>
+<p>For GDP_pct, there is a difference between Middle East &amp; North Africa and Europe &amp; Central Asia, Middle East &amp; North Africa and Latin America &amp; Caribbean, South Asia and Europe &amp; Central Asia, Sub-Saharan Africa and Europe &amp; Central Asia, North America and Middle East &amp; North Africa, and South Asia and North America.</p>
+<p>For population, there is a diference between South Asia and East Asia &amp; Pacific, South Asia and Europe &amp; Central Asia, South Asia and Latin America &amp; Caribbean, South Asia and Middle East &amp; North Africa, and Sub-Saharan Africaa and South Asia. This makes sense since the population of India is so large.</p>
+<p>The assumptions for MANOVA may not have been met. Since I got this data from reputable sources, I trust that a random sample and independent observations were taken. However, the servings and liters variables are measuring the same thing in two different ways so they are highly correlated. This leads me to believe that the no multicollinearity and homogeneity of covariance assumptions have been broken. Since data was taken from every country, I am guessing that the normality assumption is met. The linear relationship assumption is also likely, due to the relationship between servings and liters.</p>
+<h2 id="randomization-test">Randomization Test</h2>
+<p>I'm going to perform a randomized ANOVA to see if servings varies based on the region. The null hypothesis (H0) is that the means for servings are the same across all regions. The alternative hypothesis (HA) is that at least at least one regional mean is different.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">summary</span>(<span style="color:#a6e22e">aov</span>(servings<span style="color:#f92672">~</span>type,data<span style="color:#f92672">=</span>project2))
+</code></pre></div><pre><code>##              Df  Sum Sq Mean Sq F value   Pr(&gt;F)    
+## type          2  311653  155827   19.18 8.64e-09 ***
+## Residuals   576 4680145    8125                     
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">obs_F<span style="color:#f92672">&lt;-</span><span style="color:#ae81ff">19.18</span> <span style="color:#75715e">#actual test statistic</span>
+
+Fs<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">replicate</span>(<span style="color:#ae81ff">5000</span>,{
+  new<span style="color:#f92672">&lt;-</span>project2<span style="color:#f92672">%&gt;%</span><span style="color:#a6e22e">mutate</span>(servings<span style="color:#f92672">=</span><span style="color:#a6e22e">sample</span>(servings))
+  SSW<span style="color:#f92672">&lt;-</span> new<span style="color:#f92672">%&gt;%</span><span style="color:#a6e22e">group_by</span>(type)<span style="color:#f92672">%&gt;%</span><span style="color:#a6e22e">summarize</span>(SSW<span style="color:#f92672">=</span><span style="color:#a6e22e">sum</span>((servings<span style="color:#f92672">-</span><span style="color:#a6e22e">mean</span>(servings))^2))<span style="color:#f92672">%&gt;%</span><span style="color:#a6e22e">summarize</span>(<span style="color:#a6e22e">sum</span>(SSW))<span style="color:#f92672">%&gt;%</span>pull
+  SSB<span style="color:#f92672">&lt;-</span> new<span style="color:#f92672">%&gt;%</span><span style="color:#a6e22e">mutate</span>(mean<span style="color:#f92672">=</span><span style="color:#a6e22e">mean</span>(servings))<span style="color:#f92672">%&gt;%</span><span style="color:#a6e22e">group_by</span>(type)<span style="color:#f92672">%&gt;%</span><span style="color:#a6e22e">mutate</span>(groupmean<span style="color:#f92672">=</span><span style="color:#a6e22e">mean</span>(servings))<span style="color:#f92672">%&gt;%</span>
+    <span style="color:#a6e22e">summarize</span>(SSB<span style="color:#f92672">=</span><span style="color:#a6e22e">sum</span>((mean<span style="color:#f92672">-</span>groupmean)^2))<span style="color:#f92672">%&gt;%</span><span style="color:#a6e22e">summarize</span>(<span style="color:#a6e22e">sum</span>(SSB))<span style="color:#f92672">%&gt;%</span><span style="color:#a6e22e">pull
+</span><span style="color:#a6e22e">  </span>(SSB<span style="color:#f92672">/</span><span style="color:#ae81ff">2</span>)<span style="color:#f92672">/</span>(SSW<span style="color:#f92672">/</span><span style="color:#ae81ff">57</span>)
+}) <span style="color:#75715e">#null distribution</span>
+
+{<span style="color:#a6e22e">hist</span>(Fs, prob<span style="color:#f92672">=</span>T); <span style="color:#a6e22e">abline</span>(v <span style="color:#f92672">=</span> obs_F, col<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">red&#34;</span>)}
+</code></pre></div><p><!-- raw HTML omitted --></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">mean</span>(Fs<span style="color:#f92672">&gt;</span>obs_F)
+</code></pre></div><pre><code>## [1] 0
+</code></pre><p>The line showing the actual F stat is way off the graph but it would be at 19.18. I'm rejecting the null and saying that at least one regional mean is different.</p>
+<h2 id="linear-regression">Linear Regression</h2>
+<p>I'm going to build a linear regression model predicting percentage of GDP spent on healthcare based on country population and alcohol consumption by liters. First, I'll actually build the model. I'm going to start by removing the NAs from the data.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">project2na<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">na.omit</span>(project2)
+project2na<span style="color:#f92672">$</span>pop_c <span style="color:#f92672">&lt;-</span> project2na<span style="color:#f92672">$</span>population <span style="color:#f92672">-</span> <span style="color:#a6e22e">mean</span>(project2na<span style="color:#f92672">$</span>population)
+project2na<span style="color:#f92672">$</span>lit_c<span style="color:#f92672">&lt;-</span>project2na<span style="color:#f92672">$</span>liters<span style="color:#f92672">-</span><span style="color:#a6e22e">mean</span>(project2na<span style="color:#f92672">$</span>liters)
+fit1<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">lm</span>(GDP_pct <span style="color:#f92672">~</span> pop_c<span style="color:#f92672">*</span>lit_c, data<span style="color:#f92672">=</span>project2na)
+<span style="color:#a6e22e">summary</span>(fit1)
+</code></pre></div><pre><code>## 
+## Call:
+## lm(formula = GDP_pct ~ pop_c * lit_c, data = project2na)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -5.3060 -1.8724 -0.2696  1.6487 14.0675 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  6.490e+00  1.164e-01  55.742   &lt;2e-16 ***
+## pop_c       -1.919e-09  9.387e-10  -2.044   0.0415 *  
+## lit_c        2.937e-01  3.056e-02   9.611   &lt;2e-16 ***
+## pop_c:lit_c  4.500e-10  4.603e-10   0.978   0.3287    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 2.577 on 488 degrees of freedom
+## Multiple R-squared:  0.1746,	Adjusted R-squared:  0.1696 
+## F-statistic: 34.42 on 3 and 488 DF,  p-value: &lt; 2.2e-16
+</code></pre><p>The pop_c coefficient means that for a country that drinks the mean liters of alcohol for every country, an increase in population by one person will cause the percentage of GDP spent on healthcare to decrease by 1.919e-09. The lit_c coefficient means that for a country with the mean population of all countries, every one liter increase in alcohol consumption cases the GDP_pct to increase by 0.2937%. The pop_c:lit_c coefficient means that the slope of liters consumed changes by 4.5e-10 for every 1 person change in population.
+R-squared is the proportion of variance in the outcome explained by the model - according to this regression, it is 16.96%. Now I'll make a graph to visualize this model.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">fit2<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">lm</span>(GDP_pct <span style="color:#f92672">~</span> pop_c <span style="color:#f92672">*</span> lit_c, data<span style="color:#f92672">=</span>project2na)
+new1<span style="color:#f92672">&lt;-</span>project2na
+new1<span style="color:#f92672">$</span>pop_c<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">mean</span>(project2na<span style="color:#f92672">$</span>pop_c)
+new1<span style="color:#f92672">$</span>mean<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">predict</span>(fit2,new1)
+new1<span style="color:#f92672">$</span>pop_c<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">mean</span>(project2na<span style="color:#f92672">$</span>pop_c)<span style="color:#f92672">+</span><span style="color:#a6e22e">sd</span>(project2na<span style="color:#f92672">$</span>pop_c)
+new1<span style="color:#f92672">$</span>plus.sd<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">predict</span>(fit2,new1)
+new1<span style="color:#f92672">$</span>pop_c<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">mean</span>(project2na<span style="color:#f92672">$</span>pop_c)<span style="color:#f92672">-</span><span style="color:#a6e22e">sd</span>(project2na<span style="color:#f92672">$</span>pop_c)
+new1<span style="color:#f92672">$</span>minus.sd<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">predict</span>(fit2,new1)
+newint<span style="color:#f92672">&lt;-</span>new1<span style="color:#f92672">%&gt;%</span>dplyr<span style="color:#f92672">::</span><span style="color:#a6e22e">select</span>(GDP_pct,lit_c,mean,plus.sd,minus.sd)<span style="color:#f92672">%&gt;%</span><span style="color:#a6e22e">gather</span>(liters,value,<span style="color:#f92672">-</span>GDP_pct,<span style="color:#f92672">-</span>lit_c)
+
+mycols<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">#619CFF&#34;</span>,<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">#F8766D&#34;</span>,<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">#00BA38&#34;</span>)
+<span style="color:#a6e22e">names</span>(mycols)<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">-1 sd&#34;</span>,<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">mean&#34;</span>,<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">+1 sd&#34;</span>)
+mycols<span style="color:#f92672">=</span><span style="color:#a6e22e">as.factor</span>(mycols)
+
+<span style="color:#a6e22e">ggplot</span>(project2na,<span style="color:#a6e22e">aes</span>(lit_c,GDP_pct),group<span style="color:#f92672">=</span>mycols)<span style="color:#f92672">+</span><span style="color:#a6e22e">geom_point</span>()<span style="color:#f92672">+</span><span style="color:#a6e22e">geom_line</span>(data<span style="color:#f92672">=</span>new1,<span style="color:#a6e22e">aes</span>(y<span style="color:#f92672">=</span>mean,color<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">mean&#34;</span>))<span style="color:#f92672">+</span><span style="color:#a6e22e">geom_line</span>(data<span style="color:#f92672">=</span>new1,<span style="color:#a6e22e">aes</span>(y<span style="color:#f92672">=</span>plus.sd,color<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">+1 sd&#34;</span>))<span style="color:#f92672">+</span><span style="color:#a6e22e">geom_line</span>(data<span style="color:#f92672">=</span>new1,<span style="color:#a6e22e">aes</span>(y<span style="color:#f92672">=</span>minus.sd,color<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">-1 sd&#34;</span>))<span style="color:#f92672">+</span><span style="color:#a6e22e">scale_color_manual</span>(values<span style="color:#f92672">=</span>mycols)<span style="color:#f92672">+</span><span style="color:#a6e22e">labs</span>(color<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Population (cont)&#34;</span>)<span style="color:#f92672">+</span><span style="color:#a6e22e">theme</span>(legend.position<span style="color:#f92672">=</span><span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">.9</span>,<span style="color:#ae81ff">.2</span>))
+</code></pre></div><p><!-- raw HTML omitted --></p>
+<p>Now I'm going to check assumptions of linearity, normality, and homoskedasticity.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">project2na<span style="color:#f92672">%&gt;%</span><span style="color:#a6e22e">ggplot</span>()<span style="color:#f92672">+</span><span style="color:#a6e22e">geom_point</span>(<span style="color:#a6e22e">aes</span>(population,GDP_pct))
+</code></pre></div><p><!-- raw HTML omitted --></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">project2na<span style="color:#f92672">%&gt;%</span><span style="color:#a6e22e">ggplot</span>()<span style="color:#f92672">+</span><span style="color:#a6e22e">geom_point</span>(<span style="color:#a6e22e">aes</span>(population,GDP_pct))<span style="color:#f92672">+</span><span style="color:#a6e22e">scale_x_continuous</span>(lim<span style="color:#f92672">=</span><span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">250000000</span>))
+</code></pre></div><pre><code>## Warning: Removed 6 rows containing missing values (geom_point).
+</code></pre><p><!-- raw HTML omitted --></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">project2na<span style="color:#f92672">%&gt;%</span><span style="color:#a6e22e">ggplot</span>()<span style="color:#f92672">+</span><span style="color:#a6e22e">geom_point</span>(<span style="color:#a6e22e">aes</span>(liters,GDP_pct))
+</code></pre></div><p><!-- raw HTML omitted --></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">resids<span style="color:#f92672">&lt;-</span>fit1<span style="color:#f92672">$</span>residuals
+<span style="color:#a6e22e">shapiro.test</span>(resids)
+</code></pre></div><pre><code>## 
+## 	Shapiro-Wilk normality test
+## 
+## data:  resids
+## W = 0.91938, p-value = 1.478e-15
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">library</span>(sandwich); <span style="color:#a6e22e">library</span>(lmtest) <span style="color:#75715e">#homoskedasticity</span>
+</code></pre></div><pre><code>## Loading required package: zoo
+</code></pre><pre><code>## 
+## Attaching package: 'zoo'
+</code></pre><pre><code>## The following objects are masked from 'package:base':
+## 
+##     as.Date, as.Date.numeric
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">bptest</span>(fit1)
+</code></pre></div><pre><code>## 
+## 	studentized Breusch-Pagan test
+## 
+## data:  fit1
+## BP = 7.3686, df = 3, p-value = 0.06103
+</code></pre><p>I made the population vs GDP_pct graph twice with two different limits for the x-axis. Since India and China have such high populations, the graph is not readable when they are included - to fix this, I created a second graph that leaves these points out so that it could be analyzed more easily. That being said, the linearity assumption is not met on population vs GDP_pct. The linearity assumption seems somewhat met for liters vs GDP_pct. The Shapiro-Wilk test was miserably failed - I rejected the null that the data is normal. Finally, the p-value of the Breusch-Pagan test is above 0.05 so I will fail to reject the null that the data is homoskedastic. Next, I'm going to rerun the regression with robust standard errors.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">coeftest</span>(fit1, vcov <span style="color:#f92672">=</span> <span style="color:#a6e22e">vcovHC</span>(fit1))[,<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#ae81ff">2</span>]
+</code></pre></div><pre><code>##                  Estimate   Std. Error
+## (Intercept)  6.489834e+00 1.178834e-01
+## pop_c       -1.919148e-09 5.130563e-10
+## lit_c        2.936787e-01 3.149097e-02
+## pop_c:lit_c  4.499826e-10 3.804661e-10
+</code></pre><p>The coefficient estimates have not noticably changed. The standard errors have all increased - this could have solved an issue of heteroskedasticity if necessary, but the Breusch-Pagan test from before showed that heteroskedasticity was not a problem in this data.</p>
+<p>Now I'm going to run the regression with bootstrapped standard errors.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">samp_distn<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">replicate</span>(<span style="color:#ae81ff">5000</span>, {
+  boot_dat<span style="color:#f92672">&lt;-</span>project2na<span style="color:#a6e22e">[sample</span>(<span style="color:#a6e22e">nrow</span>(project2na),replace<span style="color:#f92672">=</span><span style="color:#66d9ef">TRUE</span>),]
+  fit<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">lm</span>(GDP_pct<span style="color:#f92672">~</span>population<span style="color:#f92672">*</span>liters,data<span style="color:#f92672">=</span>boot_dat)
+  <span style="color:#a6e22e">coef</span>(fit)
+})
+<span style="color:#75715e">## Estimated SEs</span>
+samp_distn<span style="color:#f92672">%&gt;%</span>t<span style="color:#f92672">%&gt;%</span>as.data.frame<span style="color:#f92672">%&gt;%</span><span style="color:#a6e22e">summarize_all</span>(sd)
+</code></pre></div><pre><code>##   (Intercept)   population     liters population:liters
+## 1    0.230928 2.187104e-09 0.03437613       4.97042e-10
+</code></pre><p>The standard errors are slightly higher than the robust standard errors, which are a little higher than the original standard errors.</p>
+<p>Finally, I'm going to run the regression without interaction.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">fit<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">lm</span>(GDP_pct <span style="color:#f92672">~</span> pop_c<span style="color:#f92672">+</span>lit_c, data<span style="color:#f92672">=</span>project2na)
+<span style="color:#a6e22e">summary</span>(fit)
+</code></pre></div><pre><code>## 
+## Call:
+## lm(formula = GDP_pct ~ pop_c + lit_c, data = project2na)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -5.3273 -1.8491 -0.3095  1.6505 14.1143 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  6.483e+00  1.162e-01  55.796  &lt; 2e-16 ***
+## pop_c       -2.388e-09  8.072e-10  -2.958  0.00325 ** 
+## lit_c        2.887e-01  3.013e-02   9.582  &lt; 2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 2.577 on 489 degrees of freedom
+## Multiple R-squared:  0.173,	Adjusted R-squared:  0.1696 
+## F-statistic: 51.15 on 2 and 489 DF,  p-value: &lt; 2.2e-16
+</code></pre><p>##Logistic Regression</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">fit<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">glm</span>(consumption<span style="color:#f92672">~</span>population<span style="color:#f92672">+</span>GDP_pct,data<span style="color:#f92672">=</span>project2na)
+<span style="color:#a6e22e">summary</span>(fit)
+</code></pre></div><pre><code>## 
+## Call:
+## glm(formula = consumption ~ population + GDP_pct, data = project2na)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -1.2654  -0.3892  -0.2133   0.4162   0.8499  
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) 5.365e-02  5.421e-02   0.990    0.323    
+## population  2.367e-10  1.480e-10   1.600    0.110    
+## GDP_pct     6.278e-02  7.542e-03   8.324 8.54e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for gaussian family taken to be 0.2193972)
+## 
+##     Null deviance: 122.54  on 491  degrees of freedom
+## Residual deviance: 107.29  on 489  degrees of freedom
+## AIC: 654.93
+## 
+## Number of Fisher Scoring iterations: 2
+</code></pre><p>The population coefficient means that for every increase of 1, the logodds of having high alcohol consumption increase by 2.367e-10. The GDP_pct coefficient means that for every increase of 1, the logodds increase by 0.06278. The intercept means that the logodds of having high consumption start at 0.05365 when the population and percentage of GDP spent on healthcare are equal to zero.</p>
+<p>###Confusion Matrix</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">project2na<span style="color:#f92672">$</span>prob<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">predict</span>(fit,type<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">response&#34;</span>)
+<span style="color:#a6e22e">table</span>(predict<span style="color:#f92672">=</span><span style="color:#a6e22e">as.numeric</span>(project2na<span style="color:#f92672">$</span>prob<span style="color:#f92672">&gt;</span><span style="color:#ae81ff">.5</span>),truth<span style="color:#f92672">=</span>project2na<span style="color:#f92672">$</span>consumption)<span style="color:#f92672">%&gt;%</span>addmargins
+</code></pre></div><pre><code>##        truth
+## predict   0   1 Sum
+##     0   204 102 306
+##     1    57 129 186
+##     Sum 261 231 492
+</code></pre><p>The confusion matrix will be used to compute accuracy, sensitivity, specificity, and precision.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">(<span style="color:#ae81ff">129</span><span style="color:#ae81ff">+204</span>)<span style="color:#f92672">/</span><span style="color:#ae81ff">492</span> <span style="color:#75715e">#accuracy</span>
+</code></pre></div><pre><code>## [1] 0.6768293
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#ae81ff">129</span><span style="color:#f92672">/</span><span style="color:#ae81ff">231</span> <span style="color:#75715e">#sensitivity</span>
+</code></pre></div><pre><code>## [1] 0.5584416
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#ae81ff">204</span><span style="color:#f92672">/</span><span style="color:#ae81ff">261</span> <span style="color:#75715e">#specificity</span>
+</code></pre></div><pre><code>## [1] 0.7816092
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#ae81ff">129</span><span style="color:#f92672">/</span><span style="color:#ae81ff">186</span> <span style="color:#75715e">#precision</span>
+</code></pre></div><pre><code>## [1] 0.6935484
+</code></pre><p>Accuracy is 0.677, sensitivity is 0.558, specificity is 0.782, and precision is 0.694.</p>
+<p>Now I'm going to plot logit against consumption outcome.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">project2na<span style="color:#f92672">$</span>logit<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">predict</span>(fit) <span style="color:#75715e">#get predicted log-odds</span>
+project2na<span style="color:#f92672">$</span>outcome<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">factor</span>(project2na<span style="color:#f92672">$</span>consumption,levels<span style="color:#f92672">=</span><span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">0&#34;</span>,<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">1&#34;</span>))
+<span style="color:#a6e22e">ggplot</span>(project2na,<span style="color:#a6e22e">aes</span>(logit, fill<span style="color:#f92672">=</span>outcome))<span style="color:#f92672">+</span><span style="color:#a6e22e">geom_density</span>(alpha<span style="color:#f92672">=</span><span style="color:#ae81ff">.3</span>)<span style="color:#f92672">+</span><span style="color:#a6e22e">scale_fill_discrete</span>(labels<span style="color:#f92672">=</span><span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">low&#34;</span>,<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">high&#34;</span>))
+</code></pre></div><p><!-- raw HTML omitted --></p>
+<p>Again, 0 refers to low alcohol consumption and 1 refers to high consumption. Now I'm going to make an ROC curve and find the area underneath the curve.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">library</span>(plotROC)
+ROCplot<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">ggplot</span>(project2na)<span style="color:#f92672">+</span><span style="color:#a6e22e">geom_roc</span>(<span style="color:#a6e22e">aes</span>(d<span style="color:#f92672">=</span>consumption,m<span style="color:#f92672">=</span>prob), n.cuts<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>)
+ROCplot
+</code></pre></div><p><!-- raw HTML omitted --></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">calc_auc</span>(ROCplot)
+</code></pre></div><pre><code>##   PANEL group       AUC
+## 1     1    -1 0.7422003
+</code></pre><p>The AUC is decent at 0.742. Next, I'm going to run a 10-fold CV.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">class_diag<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">function</span>(probs,truth){
+
+tab<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">table</span>(<span style="color:#a6e22e">factor</span>(probs<span style="color:#f92672">&gt;</span><span style="color:#ae81ff">.5</span>,levels<span style="color:#f92672">=</span><span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">FALSE&#34;</span>,<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">TRUE&#34;</span>)),truth)
+acc<span style="color:#f92672">=</span><span style="color:#a6e22e">sum</span>(<span style="color:#a6e22e">diag</span>(tab))<span style="color:#f92672">/</span><span style="color:#a6e22e">sum</span>(tab)
+sens<span style="color:#f92672">=</span>tab[2,<span style="color:#ae81ff">2</span>]<span style="color:#f92672">/</span><span style="color:#a6e22e">colSums</span>(tab)[2]
+spec<span style="color:#f92672">=</span>tab[1,<span style="color:#ae81ff">1</span>]<span style="color:#f92672">/</span><span style="color:#a6e22e">colSums</span>(tab)[1]
+ppv<span style="color:#f92672">=</span>tab[2,<span style="color:#ae81ff">2</span>]<span style="color:#f92672">/</span><span style="color:#a6e22e">rowSums</span>(tab)[2]
+
+<span style="color:#a6e22e">if</span>(<span style="color:#a6e22e">is.numeric</span>(truth)<span style="color:#f92672">==</span><span style="color:#66d9ef">FALSE</span> <span style="color:#f92672">&amp;</span> <span style="color:#a6e22e">is.logical</span>(truth)<span style="color:#f92672">==</span><span style="color:#66d9ef">FALSE</span>) truth<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">as.numeric</span>(truth)<span style="color:#ae81ff">-1</span>
+
+<span style="color:#75715e">#CALCULATE EXACT AUC</span>
+ord<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">order</span>(probs, decreasing<span style="color:#f92672">=</span><span style="color:#66d9ef">TRUE</span>)
+probs <span style="color:#f92672">&lt;-</span> probs[ord]; truth <span style="color:#f92672">&lt;-</span> truth[ord]
+
+TPR<span style="color:#f92672">=</span><span style="color:#a6e22e">cumsum</span>(truth)<span style="color:#f92672">/</span><span style="color:#a6e22e">max</span>(<span style="color:#ae81ff">1</span>,<span style="color:#a6e22e">sum</span>(truth)) 
+FPR<span style="color:#f92672">=</span><span style="color:#a6e22e">cumsum</span>(<span style="color:#f92672">!</span>truth)<span style="color:#f92672">/</span><span style="color:#a6e22e">max</span>(<span style="color:#ae81ff">1</span>,<span style="color:#a6e22e">sum</span>(<span style="color:#f92672">!</span>truth))
+
+dup<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">c</span>(probs[<span style="color:#ae81ff">-1</span>]<span style="color:#f92672">&gt;=</span>probs[<span style="color:#f92672">-</span><span style="color:#a6e22e">length</span>(probs)], <span style="color:#66d9ef">FALSE</span>)
+TPR<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">0</span>,TPR[<span style="color:#f92672">!</span>dup],<span style="color:#ae81ff">1</span>); FPR<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">0</span>,FPR[<span style="color:#f92672">!</span>dup],<span style="color:#ae81ff">1</span>)
+
+n <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">length</span>(TPR)
+auc<span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">sum</span>( ((TPR[<span style="color:#ae81ff">-1</span>]<span style="color:#f92672">+</span>TPR[<span style="color:#f92672">-</span>n])<span style="color:#f92672">/</span><span style="color:#ae81ff">2</span>) <span style="color:#f92672">*</span> (FPR[<span style="color:#ae81ff">-1</span>]<span style="color:#f92672">-</span>FPR[<span style="color:#f92672">-</span>n]) )
+
+<span style="color:#a6e22e">data.frame</span>(acc,sens,spec,ppv,auc)
+}
+
+<span style="color:#a6e22e">set.seed</span>(<span style="color:#ae81ff">1234</span>)
+k<span style="color:#f92672">=</span><span style="color:#ae81ff">10</span>
+
+data1<span style="color:#f92672">&lt;-</span>project2na<span style="color:#a6e22e">[sample</span>(<span style="color:#a6e22e">nrow</span>(project2na)),]
+folds<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">cut</span>(<span style="color:#a6e22e">seq</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#a6e22e">nrow</span>(project2na)),breaks<span style="color:#f92672">=</span>k,labels<span style="color:#f92672">=</span>F)
+
+diags<span style="color:#f92672">&lt;-</span><span style="color:#66d9ef">NULL</span>
+<span style="color:#a6e22e">for</span>(i in <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>k){
+train<span style="color:#f92672">&lt;-</span>data1[folds<span style="color:#f92672">!=</span>i,]
+test<span style="color:#f92672">&lt;-</span>data1[folds<span style="color:#f92672">==</span>i,]
+truth<span style="color:#f92672">&lt;-</span>test<span style="color:#f92672">$</span>consumption
+
+fit<span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">glm</span>(consumption<span style="color:#f92672">~</span>population<span style="color:#f92672">+</span>GDP_pct,data<span style="color:#f92672">=</span>project2na)
+probs<span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">predict</span>(fit,newdata<span style="color:#f92672">=</span>test,test<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">prob&#34;</span>)
+
+diags<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">rbind</span>(diags,<span style="color:#a6e22e">class_diag</span>(probs,truth)) 
+}
+
+<span style="color:#a6e22e">apply</span>(diags, <span style="color:#ae81ff">2</span>, mean)
+</code></pre></div><pre><code>##       acc      sens      spec       ppv       auc 
+## 0.6770612 0.5585191 0.7817435 0.6953253 0.7382419
+</code></pre><p>Average out-of-sample accuracy is 0.677, sensitivity is 0.553, specificity is 0.782, and precision is 0.683. These are only slightly lower than the numbers calculated from the confusion matrix earlier.</p>
+<p>##LASSO</p>
+<p>Finally, I'm going to run a lasso. I'm going to use the consumption variable as the response.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#a6e22e">library</span>(glmnet)
+</code></pre></div><pre><code>## Loading required package: Matrix
+</code></pre><pre><code>## 
+## Attaching package: 'Matrix'
+</code></pre><pre><code>## The following objects are masked from 'package:tidyr':
+## 
+##     expand, pack, unpack
+</code></pre><pre><code>## Loaded glmnet 3.0-2
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">fit <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">glm</span>(consumption <span style="color:#f92672">~</span> <span style="color:#ae81ff">-1</span> <span style="color:#f92672">+</span> country<span style="color:#f92672">+</span>liters<span style="color:#f92672">+</span>type<span style="color:#f92672">+</span>servings<span style="color:#f92672">+</span>GDP_pct<span style="color:#f92672">+</span>region<span style="color:#f92672">+</span>population, data <span style="color:#f92672">=</span> project2na,
+    family <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">binomial&#34;</span>)
+</code></pre></div><pre><code>## Warning: glm.fit: algorithm did not converge
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">x <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">model.matrix</span>(fit)
+x <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">scale</span>(x)
+y <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as.matrix</span>(project2na<span style="color:#f92672">$</span>consumption)
+cv <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">cv.glmnet</span>(x, y, family <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">binomial&#34;</span>)
+lasso <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">glmnet</span>(x, y, family <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">binomial&#34;</span>, lambda <span style="color:#f92672">=</span> cv<span style="color:#f92672">$</span>lambda.1se)
+<span style="color:#a6e22e">coef</span>(lasso)
+</code></pre></div><pre><code>## 177 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
+##                                            s0
+## (Intercept)                       0.637729613
+## countryAfghanistan                .          
+## countryAlbania                    0.378224264
+## countryAlgeria                    .          
+## countryAndorra                    .          
+## countryAngola                     0.112224869
+## countryArgentina                  .          
+## countryArmenia                   -0.264114721
+## countryAustralia                  .          
+## countryAustria                    .          
+## countryAzerbaijan                 .          
+## countryBahrain                    .          
+## countryBangladesh                 .          
+## countryBarbados                   0.005816327
+## countryBelarus                    .          
+## countryBelgium                    .          
+## countryBelize                     .          
+## countryBenin                      .          
+## countryBhutan                     .          
+## countryBolivia                   -0.264126379
+## countryBotswana                   0.245199355
+## countryBrazil                     .          
+## countryBulgaria                   .          
+## countryBurkina Faso              -0.397132605
+## countryBurundi                    0.005794029
+## countryCabo Verde                -0.317347303
+## countryCambodia                   .          
+## countryCameroon                   0.138779343
+## countryCanada                     .          
+## countryCentral African Republic   .          
+## countryChad                       .          
+## countryChile                      .          
+## countryChina                      0.351567553
+## countryColombia                  -0.370562316
+## countryComoros                    .          
+## countryCosta Rica                -0.423765108
+## countryCote d'Ivoire             -0.317372986
+## countryCroatia                    .          
+## countryCuba                      -0.370575479
+## countryCyprus                     .          
+## countryCzech Republic             .          
+## countryDenmark                    .          
+## countryDjibouti                   .          
+## countryDominica                   .          
+## countryDominican Republic         0.032352078
+## countryEcuador                   -0.370587286
+## countryEl Salvador                .          
+## countryEquatorial Guinea          0.138737994
+## countryEritrea                    .          
+## countryEstonia                    .          
+## countryEthiopia                   .          
+## countryFiji                       .          
+## countryFinland                    .          
+## countryFrance                     .          
+## countryGabon                      .          
+## countryGeorgia                    0.245128799
+## countryGermany                    .          
+## countryGhana                      .          
+## countryGreece                     .          
+## countryGrenada                    .          
+## countryGuatemala                  .          
+## countryGuinea                     .          
+## countryGuinea-Bissau              .          
+## countryGuyana                     .          
+## countryHaiti                      0.112125883
+## countryHonduras                  -0.051420678
+## countryHungary                    .          
+## countryIceland                    .          
+## countryIndia                      .          
+## countryIndonesia                  .          
+## countryIraq                       .          
+## countryIreland                    .          
+## countryIsrael                     .          
+## countryItaly                      .          
+## countryJamaica                   -0.157820055
+## countryJapan                      .          
+## countryJordan                     .          
+## countryKazakhstan                 .          
+## countryKenya                      .          
+## countryKiribati                   .          
+## countryKuwait                     .          
+## countryLatvia                     .          
+## countryLebanon                    .          
+## countryLesotho                    .          
+## countryLiberia                   -0.078025412
+## countryLibya                      .          
+## countryLithuania                  .          
+## countryLuxembourg                 .          
+## countryMadagascar                 .          
+## countryMalawi                     .          
+## countryMalaysia                   .          
+## countryMaldives                   .          
+## countryMali                       .          
+## countryMalta                      .          
+## countryMarshall Islands           .          
+## countryMauritania                 .          
+## countryMauritius                  .          
+## countryMexico                     0.218508471
+## countryMoldova                    0.005707246
+## countryMonaco                     .          
+## countryMongolia                   0.378091010
+## countryMorocco                    .          
+## countryMozambique                 .          
+## countryMyanmar                    .          
+## countryNamibia                    .          
+## countryNauru                      .          
+## countryNepal                      .          
+## countryNetherlands                .          
+## countryNew Zealand                .          
+## countryNicaragua                 -0.184444028
+## countryNiger                      .          
+## countryNigeria                    .          
+## countryNorway                     .          
+## countryOman                       .          
+## countryPakistan                   .          
+## countryPalau                      .          
+## countryPanama                     .          
+## countryPapua New Guinea           .          
+## countryParaguay                   .          
+## countryPeru                       0.058890221
+## countryPhilippines               -0.477045739
+## countryPoland                     .          
+## countryPortugal                   .          
+## countryQatar                      .          
+## countryRomania                    .          
+## countryRussian Federation         .          
+## countryRwanda                     .          
+## countrySamoa                      .          
+## countrySan Marino                 .          
+## countrySaudi Arabia               .          
+## countrySenegal                    .          
+## countrySerbia                     .          
+## countrySeychelles                -0.344054510
+## countrySierra Leone               .          
+## countrySingapore                  .          
+## countrySlovenia                   .          
+## countrySolomon Islands            .          
+## countrySouth Africa               .          
+## countrySpain                      .          
+## countrySri Lanka                  .          
+## countrySt. Lucia                  .          
+## countrySudan                      .          
+## countrySuriname                   0.191871216
+## countrySweden                     .          
+## countrySwitzerland                .          
+## countryTajikistan                 .          
+## countryTanzania                   0.165265589
+## countryThailand                   .          
+## countryTimor-Leste                .          
+## countryTogo                       .          
+## countryTonga                      .          
+## countryTunisia                    .          
+## countryTurkey                     .          
+## countryTurkmenistan               .          
+## countryTuvalu                     .          
+## countryUganda                     .          
+## countryUkraine                    .          
+## countryUnited Arab Emirates       .          
+## countryUnited Kingdom             .          
+## countryUruguay                    .          
+## countryUzbekistan                 .          
+## countryVanuatu                    .          
+## countryVietnam                    .          
+## countryZambia                     .          
+## countryZimbabwe                  -0.503666643
+## liters                           13.206140062
+## typespirit                        .          
+## typewine                          .          
+## servings                          .          
+## GDP_pct                           .          
+## regionEurope &amp; Central Asia       .          
+## regionLatin America &amp; Caribbean   .          
+## regionMiddle East &amp; North Africa  .          
+## regionNorth America               .          
+## regionSouth Asia                  .          
+## regionSub-Saharan Africa          .          
+## population                        .
+</code></pre><p>The variables that are retained are Albania, Angola, Armenia, Bolivia, Botswana, Burkina Faso, Cabo Verde, Cameroon, China, Colombia, Costa Rica, Cote d'Ivoire, Cuba, Dominican Republic, Ecuador, Equatorial Guinea, Georgia, Haiti, Honduras, Jamaica, Liberia, Mexico, Mongolia, Nicaragua, Peru, Philippines, Seychelles, Suriname, Tanzania, Zimbabwe, and liters. I'm going to run a 10-fold CV using these variables.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r">project2na<span style="color:#f92672">$</span>Albania <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ifelse</span>(project2na<span style="color:#f92672">$</span>country <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Albania&#34;</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>)
+project2na<span style="color:#f92672">$</span>Angola <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ifelse</span>(project2na<span style="color:#f92672">$</span>country <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Angola&#34;</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>)
+project2na<span style="color:#f92672">$</span>Armenia<span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ifelse</span>(project2na<span style="color:#f92672">$</span>country <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Armenia&#34;</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>)
+project2na<span style="color:#f92672">$</span>Boliva <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ifelse</span>(project2na<span style="color:#f92672">$</span>country <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Bolivia&#34;</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>)
+project2na<span style="color:#f92672">$</span>Botswana <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ifelse</span>(project2na<span style="color:#f92672">$</span>country <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Botswana&#34;</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>)
+project2na<span style="color:#f92672">$</span>Burkina <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ifelse</span>(project2na<span style="color:#f92672">$</span>country <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Burkina Faso&#34;</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>)
+project2na<span style="color:#f92672">$</span>Cabo <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ifelse</span>(project2na<span style="color:#f92672">$</span>country <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Cabo Verde&#34;</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>)
+project2na<span style="color:#f92672">$</span>Cameroon <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ifelse</span>(project2na<span style="color:#f92672">$</span>country <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Cameroon&#34;</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>)
+project2na<span style="color:#f92672">$</span>China <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ifelse</span>(project2na<span style="color:#f92672">$</span>country <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">China&#34;</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>)
+project2na<span style="color:#f92672">$</span>Liberia <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ifelse</span>(project2na<span style="color:#f92672">$</span>country <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Liberia&#34;</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>)
+project2na<span style="color:#f92672">$</span>Mexico <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ifelse</span>(project2na<span style="color:#f92672">$</span>country <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Mexico&#34;</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>)
+project2na<span style="color:#f92672">$</span>Mongolia <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ifelse</span>(project2na<span style="color:#f92672">$</span>country <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Mongolia&#34;</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>)
+project2na<span style="color:#f92672">$</span>Nicaragua <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ifelse</span>(project2na<span style="color:#f92672">$</span>country <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Nicaragua&#34;</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>)
+project2na<span style="color:#f92672">$</span>Peru <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ifelse</span>(project2na<span style="color:#f92672">$</span>country <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Peru&#34;</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>)
+project2na<span style="color:#f92672">$</span>Philippines <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ifelse</span>(project2na<span style="color:#f92672">$</span>country <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Philippines&#34;</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>)
+project2na<span style="color:#f92672">$</span>Seychelles <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ifelse</span>(project2na<span style="color:#f92672">$</span>country <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Seychelles&#34;</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>)
+project2na<span style="color:#f92672">$</span>Suriname <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ifelse</span>(project2na<span style="color:#f92672">$</span>country <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Suriname&#34;</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>)
+project2na<span style="color:#f92672">$</span>Tanzania <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ifelse</span>(project2na<span style="color:#f92672">$</span>country <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Tanzania&#34;</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>)
+project2na<span style="color:#f92672">$</span>Zimbabwe <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ifelse</span>(project2na<span style="color:#f92672">$</span>country <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Zimbabwe&#34;</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>)
+
+<span style="color:#a6e22e">set.seed</span>(<span style="color:#ae81ff">1234</span>)
+k<span style="color:#f92672">=</span><span style="color:#ae81ff">10</span>
+
+data1<span style="color:#f92672">&lt;-</span>project2na<span style="color:#a6e22e">[sample</span>(<span style="color:#a6e22e">nrow</span>(project2na)),]
+folds<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">cut</span>(<span style="color:#a6e22e">seq</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#a6e22e">nrow</span>(project2na)),breaks<span style="color:#f92672">=</span>k,labels<span style="color:#f92672">=</span>F)
+
+diags<span style="color:#f92672">&lt;-</span><span style="color:#66d9ef">NULL</span>
+<span style="color:#a6e22e">for</span>(i in <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>k){
+train<span style="color:#f92672">&lt;-</span>data1[folds<span style="color:#f92672">!=</span>i,]
+test<span style="color:#f92672">&lt;-</span>data1[folds<span style="color:#f92672">==</span>i,]
+truth<span style="color:#f92672">&lt;-</span>test<span style="color:#f92672">$</span>consumption
+
+fit<span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">glm</span>(consumption<span style="color:#f92672">~</span><span style="color:#ae81ff">-1</span><span style="color:#f92672">+</span>Albania<span style="color:#f92672">+</span>Angola<span style="color:#f92672">+</span>Armenia<span style="color:#f92672">+</span>Boliva<span style="color:#f92672">+</span>Botswana<span style="color:#f92672">+</span>Burkina<span style="color:#f92672">+</span>Cabo<span style="color:#f92672">+</span>Cameroon<span style="color:#f92672">+</span>China<span style="color:#f92672">+</span>Liberia<span style="color:#f92672">+</span>Mexico<span style="color:#f92672">+</span>Mongolia<span style="color:#f92672">+</span>Nicaragua<span style="color:#f92672">+</span>Peru<span style="color:#f92672">+</span>Philippines<span style="color:#f92672">+</span>Seychelles<span style="color:#f92672">+</span>Suriname<span style="color:#f92672">+</span>Tanzania<span style="color:#f92672">+</span>Zimbabwe,data<span style="color:#f92672">=</span>project2na)
+probs<span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">predict</span>(fit,newdata<span style="color:#f92672">=</span>test,test<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">prob&#34;</span>)
+
+diags<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">rbind</span>(diags,<span style="color:#a6e22e">class_diag</span>(probs,truth)) 
+}
+
+<span style="color:#a6e22e">apply</span>(diags, <span style="color:#ae81ff">2</span>, mean)
+</code></pre></div><pre><code>##       acc      sens      spec       ppv       auc 
+## 0.5916327 0.1315299 1.0000000 1.0000000 0.5657649
+</code></pre><p>The accuracy is 0.591, lower than the accuracy for the 10-fold CV done earlier. Using just population and GDP_pct must have been better for predicting consumption.</p>
+
+              <hr>
+              <div class="related-posts">
+                <h5>Related Posts</h5>
+                
+              </div>
+            </div>
+          </div>
+          <hr>
+        <div class="disqus">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+
+    (function() {
+      
+      
+      if (window.location.hostname == "localhost")
+        return;
+
+      var disqus_shortname = '';
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+        </div>
+      </div>
+      
+    </div>
+
+    
+    <footer>
+  <div id="footer">
+    <div class="container">
+      <p class="text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io/">Hugo</a> and
+      <a href="http://www.github.com/nurlansu/hugo-sustain/">sustain</a> with ♥</p>
+    </div>
+  </div>
+</footer>
+<div class="footer"></div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="/js/docs.min.js"></script>
+<script src="/js/main.js"></script>
+
+<script src="/js/ie10-viewport-bug-workaround.js"></script>
+
+
+    
+  </body>
+</html>

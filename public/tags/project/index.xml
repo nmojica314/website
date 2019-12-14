@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>project on Nicolette Mojica</title>
+    <link>/tags/project/</link>
+    <description>Recent content in project on Nicolette Mojica</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-US</language>
+    <lastBuildDate>Sun, 15 Dec 2019 21:13:14 -0500</lastBuildDate>
+    
+	<atom:link href="/tags/project/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Project 1</title>
+      <link>/blog/2015-07-23-r-rmarkdown/</link>
+      <pubDate>Sun, 15 Dec 2019 21:13:14 -0500</pubDate>
+      
+      <guid>/blog/2015-07-23-r-rmarkdown/</guid>
+      <description> Project 1 To conclude Unit I, I created an exploratory data analysis project. This project compared data about every country’s alcohol consumption and the percentage of their GDP spent on health care. Follow the link below to see what I found!
+Project 1
+ </description>
+    </item>
+    
+  </channel>
+</rss>

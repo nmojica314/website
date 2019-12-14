@@ -1,0 +1,175 @@
+---
+title: "Project 1 - NSM724"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Introduction
+
+This project focuses on two datasets named "drinks" and "healthgdp". "drinks" is a dataset from fivethirtyeight which gives liters and servings of alcohol consumption per capita in every country. "healthgdp" contains data released by the World Health Organization which gives info about the percentage of the yearly GDP that is spent on healthcare in every country. It also assigns each country to a region. I will be joining these datasets and analyzing the data in the hopes of seeing the habits of alcohol consumption in each region. I am also interested to see if there will be an association between percentage of GDP spent on healthcare and total alcohol consumption. 
+
+```{r}
+library(tidyverse)
+library(fivethirtyeight)
+
+library(readxl)
+healthgdp <- read_excel("~/Desktop/gdp data2.xlsx")
+```
+
+Here is a preview of the datasets.
+
+```{r}
+head(drinks)
+head(healthgdp)
+```
+##Tidying
+
+The "drinks" dataset is not tidy so the pivot_longer function will be used on it. The servings columns are actually values of a variable - type of alcohol. A new column called "type" will be created in order to indicate this. The original values of those columns will be placed in a column called "servings". Before doing all of this, the original column titles will be changed in order to be more clear.
+
+```{r}
+drinks<-drinks%>%rename(
+    beer = beer_servings,
+    wine = wine_servings,
+    spirit = spirit_servings
+    )
+drinks<-pivot_longer(drinks,c("beer","spirit","wine"),names_to = "type",values_to = "servings")
+head(drinks)
+```
+##Joining
+
+Now that both datasets are tidy, they can be joined. I am using a left join with "drinks" on the left because the "healthgdp" dataset contains several "country" values that are not actually countries, but regions or economic groupings. Other than that, no other rows should be dropped. There are some countries in the "drinks" dataset that do not appear in the "healthgdp" dataset so there are a handful of NA cases. The full dataset will be named "project1".
+
+```{r}
+project1<-left_join(drinks,healthgdp)
+head(project1)
+```
+
+##Wrangling
+
+It's time to see some summary statistics. For the sake of simplicity, any NA rows will be removed from here on out. I wanted the full dataset to contain every country which is why I didn't do an inner join earlier. Now that we are looking at statistics, however, it is necessary to remove the NA rows. 
+
+```{r}
+project1<-project1%>%na.omit
+project1%>%group_by(region)%>%summarise(mean_GDP=mean(GDP_pct),sd_GDP=sd(GDP_pct))%>%arrange(mean_GDP)
+project1%>%summarise(max_GDP=max(GDP_pct),min_GDP=min(GDP_pct),max_liters=max(total_litres_of_pure_alcohol),min_liters=min(total_litres_of_pure_alcohol),max_servings=max(servings),min_servings=min(servings))
+```
+I've calculated the mean percentage of GDP spent on healthcare in each region. North America appears to be spending the most by far. I've also found the maximum and minimum of each numeric variable in order to get an idea of the range of this data.
+
+Next, I'm going to see the mean and standard deviation of servings and liters of alcohol consumed in each region. For servings I'm also grouping by type of alcohol. I'm arranging from highest to lowest consumption so I can get an idea of how much alcohol each region consumes. 
+```{r}
+project1%>%group_by(region,type)%>%summarise(mean_servings=mean(servings),sd_servings=sd(servings))%>%arrange(desc(mean_servings))
+project1%>%group_by(region)%>%
+  summarise(mean_liters=mean(total_litres_of_pure_alcohol),sd_liters=sd(total_litres_of_pure_alcohol))%>%
+  arrange(desc(mean_liters))
+```
+I wonder if there is a correlation between healthcare spending and alcohol consumption. For the next part, I am going to create a new column that represents total servings of alcohol per person and then see if there is a correlation between that and healthcare spending. I'll do the same with total liters of alcohol. Finally, I'll see how strong the correlation between liters of alcohol consumed and servings of alcohol consumed is.
+
+```{r}
+project1<-project1%>%group_by(country)%>%mutate(total_servings=sum(servings))%>%ungroup(country)
+head(project1)
+project1%>%select(total_litres_of_pure_alcohol,GDP_pct)%>%cor
+project1%>%select(total_servings,GDP_pct)%>%cor
+project1%>%select(total_litres_of_pure_alcohol,total_servings)%>%cor
+```
+There is a small correlation between GDP and liters/servings of alcohol. There is a strong correlation between liters and servings of alcohol consumed which makes sense. 
+
+Going back to the previous summary stats, I am wondering why the percent GDP spent on healthcare is so high in North America and why there are NAs for this row. I'm going to look at the individual healthcare spending for all North American countries to get a better idea.
+```{r}
+project1%>%filter(region=="North America")%>%select(country,GDP_pct)
+```
+Uh oh, there is only one country in the North America region! After looking through the data, I have found that USA is not in the drinks dataset so it was dropped during the left join. Mexico is classified as Latin America so Canada is the only country representing North America. This has prompted me to see how many countries are in each region to make sure this isn't happening to other regions I am studying
+```{r}
+project1%>%group_by(region)%>%summarise(country_count=n_distinct(country))
+```
+Luckily, all of the other regions have more than one country.
+
+##Visualization
+Now that I have done some summary statistics and am more familiar with the layout of the data, I'm going to make a couple plots.
+```{r}
+project1%>%ggplot(aes(total_litres_of_pure_alcohol,total_servings))+
+  xlab("Total Liters Consumed")+ylab("Total Servings Consumed")+
+  ggtitle("Total Alcohol Consumption by Region")+labs(color="Region")+
+  theme(legend.position = "left")+
+  geom_point(aes(color=region))+
+  scale_y_continuous(breaks=c(0,100,200,300,400,500,600,700))+scale_color_hue(c=150)
+```
+
+For the most part, there is a very strong correlation between total liters of alcohol consumed and total servings consumed. By associating each region with a color, we can see that the majority of countries that do not follow this trend are in Sub-Saharan Africa. It seems that there are a lot of European/Central Asian countries consuming the most alcohol, while the Sub-Saharan African countries are consuming the fewest servings. 
+
+```{r}
+project1%>%ggplot(aes(region,servings,fill=type))+
+  geom_bar(stat="summary",fun.y="mean",position = "dodge")+
+  theme(axis.text.x = element_text(angle=45, hjust=1))+scale_fill_brewer(palette="Accent")+
+  xlab("Region")+ylab("Servings")+ggtitle("Alcohol Servings Consumed by Type and Region")+labs(fill="Type of Alcohol")
+  
+```
+
+This graph shows the breakdown of the type of alcohol favored by members of each region. Typically, if there is a type of alcohol that dominates the others, it is beer as shown by North America, Europe & Central Asia, and Sub-Saharan Africa. Wine also tends to be consumed at the lowest rate. North America, Europe & Central Asia, and Latin America & Caribbean appear to be consuming the most servings. This is consistent with the previous plot. 
+
+##Dimensionality Reduction
+
+I'm going to run a PCA on this data. First, I'll set it all up by scaling the numeric data and running princomp() to get some preliminary info.
+```{r}
+proj1num<-project1%>%select_if(is.numeric)%>%scale
+rownames(proj1num)<-project1$country
+head(proj1num)
+proj1pca<-princomp(proj1num)
+names(proj1pca)
+summary(proj1pca, loadings=T)
+```
+It seems like component 1 explains a high proportion of variance. Component 2 also explains a fair amount of variance. Let's make sure these hunches are right by making a scree plot. From there I'll decide how many components to use.
+```{r}
+eigval<-proj1pca$sdev^2
+varprop=round(eigval/sum(eigval),2)
+
+ggplot()+geom_bar(aes(y=varprop,x=1:4),stat="identity")+xlab("")+geom_path(aes(y=varprop,x=1:4))+
+  geom_text(aes(x=1:4,y=varprop,label=round(varprop,2)),vjust=1,col="white",size=5)+
+  scale_y_continuous(breaks=seq(0,.6,.2),labels = scales::percent)+
+  scale_x_continuous(breaks=1:10)
+```
+
+It seems that the elbow of this graph is at the second component. The cumulative proportion of variance after this component is around 0.9 so that seems like a good place to cut off. I'll include components 1 and 2 in my analysis. I'm going to pull up loadings again in order to interpret the components. 
+
+```{r}
+proj1pca$loadings
+```
+
+For component 1, all of the variables have the same sign and similar magnitude. Earlier, I found a slight correlation between percentage of GDP spent on healthcare and alcohol consumption so it makes sense that the first principle component would be dependent on strength of both of these. For example, a country that spends little money on healthcare and consumes a small amount of alcohol will have a high component 1 score. On component 2, all of the variables share a sign except for percentage of GDP spent on healthcare. It seems as though the trade-off between healthcare spending and alcohol consumption controls this component. For a score to have a higher magnitude on component 2, their healthcare spending must be either very high or very low compared to their alcohol consumption. 
+
+```{r}
+ggplot()+geom_point(aes(proj1pca$scores[,1], proj1pca$scores[,2]))+xlab("PC1")+ylab("PC2")
+```
+
+There are a few extreme points on PC2 - let's investigate! 
+
+```{r}
+Name<-project1$country
+proj1pca$scores%>%as.data.frame%>%cbind(Name,.)%>%top_n(9,Comp.2)%>%arrange(desc(Comp.2))
+project1%>%filter(country=="Marshall Islands"|country=="Tuvalu")
+
+```
+These points seem to refer to the Marshall Islands and Tuvalu. Upon further investigation, it seems that these two have very low alcohol consumption and high healthcare spending. This lines up with what I noted as the parameters for component 2. I'll do this all again to see the bottom scorers for PC1.
+
+```{r}
+proj1pca$scores%>%as.data.frame%>%cbind(Name,.)%>%top_n(5,wt=desc(Comp.1))%>%arrange(Comp.1)
+project1%>%filter(country=="France"|country=="Grenada"|country=="Germany"|country=="Andorra"|country=="Belarus")
+```
+
+These countries have both high alcohol consumption and high healthcare spending. Once again, this matches the parameters that I noted for component 1. 
+
+Lets look at another graph to explain the roles the variables play in both componenets.
+```{r}
+proj1pca$loadings[1:4,1:2]%>%as.data.frame%>%rownames_to_column%>%
+ggplot()+geom_hline(aes(yintercept=0),lty=2)+
+  geom_vline(aes(xintercept=0),lty=2)+ylab("PC2")+xlab("PC1")+
+  geom_segment(aes(x=0,y=0,xend=Comp.1,yend=Comp.2),arrow=arrow(),col="red")+
+  geom_label(aes(x=Comp.1*1.1,y=Comp.2*1.1,label=rowname))+expand_limits(x=-0.8)
+```
+
+This graph simply confirms what I mentioned earlier. All of the variables contribute to PC1 in the same way - when any of these values is high, it contributes to a lower PC1 score. For PC2, the three alcohol variables are in opposition to the GDP_pct variable. When healthcare spending is high and alcohol consumption is low, there is a high PC2 score.
+

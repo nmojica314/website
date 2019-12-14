@@ -1,0 +1,317 @@
+---
+title: "Project 2 - NSM724"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+I will be using the same dataset that I created for project 1 with the addition of a population variable. This is a dataset that compares countries' alcohol consumption and percentage of GDP spent on healthcare, as well as their population. The "liters" variable shows the liters of pure alcohol consumed per capita for each country. The "type" and "servings" variables go together. The servings variable indicates the number of servings of a certain type of alcohol each country drinks per capita and the type variable indicates the type of alcohol that the servings variable is referring to. The GDP_pct variable shows the percentage of the GDP that a country spends on healthcare ever year. The region variable splits countries into these regions: East Asia and Pacific, Europe and Central Asia, Latin America and Carribbean, Middle East and North Africa, North America, South Asia, and Sub-Saharan Africa.
+
+```{r}
+library(tidyverse)
+library(fivethirtyeight)
+library(readxl)
+healthgdp <- read_excel("~/Desktop/gdp data2.xlsx")
+pop<-read_excel("~/Desktop/country data.xls")
+drinks<-drinks%>%rename(
+    beer = beer_servings,
+    wine = wine_servings,
+    spirit = spirit_servings,
+    liters=total_litres_of_pure_alcohol
+    )
+drinks<-pivot_longer(drinks,c("beer","spirit","wine"),names_to = "type",values_to = "servings")
+project2<-left_join(drinks,healthgdp)
+project2<-left_join(project2,pop)
+head(project2)
+project2%>%summarise(mean(liters))
+```
+
+The mean liters of alcohol consumed per capita is 4.717098 so I will create a new binary variable that distinguishes countries that drink more liters than the mean (high consumption) and countries that drink less than the mean (low consumption). Low consumption will be assigned a 0 and high consumption will be a 1. 
+
+```{r}
+project2<-project2%>%mutate(consumption=case_when(liters<mean(liters) ~ "low",
+                                                  liters>mean(liters) ~ "high"))%>%mutate(consumption=as_factor(consumption))%>%mutate(consumption=as.numeric(consumption)-1)
+head(project2)
+```
+
+## MANOVA and ANOVA
+
+I'm going to test whether any of the numeric variables vary across region. 
+
+```{r}
+man1<-manova(cbind(liters,servings,GDP_pct,population)~region, data=project2)
+summary(man1)
+```
+It is significant so I will now run univariate ANOVAs to see which variables are significant and post-hoc t-tests to see which regions differ.
+
+```{r}
+summary.aov(man1)
+pairwise.t.test(project2$liters,project2$region,
+                p.adj="none")
+pairwise.t.test(project2$servings,project2$region,
+                p.adj="none")
+pairwise.t.test(project2$GDP_pct,project2$region,
+                p.adj="none")
+pairwise.t.test(project2$population,project2$region,
+                p.adj="none")
+```
+One MANOVA, 3 ANOVAs and 63 t-tests were performed, making for a total of 67 tests. The probability of type I error is this number multiplied by 0.05 or 3.35 and the alpha should be adjusted to 0.05/67 or 7.463e-4. After making this adjustment, all of the ANOVA tests are still significant, meaning that there is a difference in mean across regions for all three variables tested. 
+
+For liters, there is a difference between Europe & Central Asia and East Asia & Pacific, Latin America & Caribbean and East Asia & Pacific, Latin America & Caribbean and Europe & Central Asia, Middle East & North Africa and Europe & Central Asia, Middle East & North Africa and Latin America & Caribbean, South Asia and Europe & Central Asia, South Asia and Latin America & Caribbean, Sub-Saharan Africa and Europe & Central Asia, Sub-Saharan Africa and Latin America & Caribbean, North America and Middle East & North Africa, South Asia and North America, Sub-Saharan Africa and Middle East & North Africa, and Sub-Saharan Africa and South Asia. 
+
+For servings, there is a difference between Europe & Central Asia and East Asia & Pacific, Latin America & Caribbean and East Asia & Pacific, Latin America & Caribbean and Europe & Central Asia, Middle East & North Africa and Europe & Central Asia, Middle East & North Africa and Latin America & Caribbean, South Asia and Europe & Central Asia, South Asia and Latin America & Caribbean, Sub-Saharan Africa and Europe & Central Asia, and Sub-Saharan Africa and Latin America & Caribbean
+
+For GDP_pct, there is a difference between Middle East & North Africa and Europe & Central Asia, Middle East & North Africa and Latin America & Caribbean, South Asia and Europe & Central Asia, Sub-Saharan Africa and Europe & Central Asia, North America and Middle East & North Africa, and South Asia and North America. 
+
+For population, there is a diference between South Asia and East Asia & Pacific, South Asia and Europe & Central Asia, South Asia and Latin America & Caribbean, South Asia and Middle East & North Africa, and Sub-Saharan Africaa and South Asia. This makes sense since the population of India is so large. 
+
+The assumptions for MANOVA may not have been met. Since I got this data from reputable sources, I trust that a random sample and independent observations were taken. However, the servings and liters variables are measuring the same thing in two different ways so they are highly correlated. This leads me to believe that the no multicollinearity and homogeneity of covariance assumptions have been broken. Since data was taken from every country, I am guessing that the normality assumption is met. The linear relationship assumption is also likely, due to the relationship between servings and liters. 
+
+## Randomization Test
+
+I'm going to perform a randomized ANOVA to see if servings varies based on the region. The null hypothesis (H0) is that the means for servings are the same across all regions. The alternative hypothesis (HA) is that at least at least one regional mean is different. 
+
+```{r}
+summary(aov(servings~type,data=project2))
+obs_F<-19.18 #actual test statistic
+
+Fs<-replicate(5000,{
+  new<-project2%>%mutate(servings=sample(servings))
+  SSW<- new%>%group_by(type)%>%summarize(SSW=sum((servings-mean(servings))^2))%>%summarize(sum(SSW))%>%pull
+  SSB<- new%>%mutate(mean=mean(servings))%>%group_by(type)%>%mutate(groupmean=mean(servings))%>%
+    summarize(SSB=sum((mean-groupmean)^2))%>%summarize(sum(SSB))%>%pull
+  (SSB/2)/(SSW/57)
+}) #null distribution
+
+{hist(Fs, prob=T); abline(v = obs_F, col="red")}
+mean(Fs>obs_F)
+```
+The line showing the actual F stat is way off the graph but it would be at 19.18. I'm rejecting the null and saying that at least one regional mean is different. 
+
+## Linear Regression
+
+I'm going to build a linear regression model predicting percentage of GDP spent on healthcare based on country population and alcohol consumption by liters. First, I'll actually build the model. I'm going to start by removing the NAs from the data.
+
+```{r}
+project2na<-na.omit(project2)
+project2na$pop_c <- project2na$population - mean(project2na$population)
+project2na$lit_c<-project2na$liters-mean(project2na$liters)
+fit1<-lm(GDP_pct ~ pop_c*lit_c, data=project2na)
+summary(fit1)
+```
+The pop_c coefficient means that for a country that drinks the mean liters of alcohol for every country, an increase in population by one person will cause the percentage of GDP spent on healthcare to decrease by 1.919e-09. The lit_c coefficient means that for a country with the mean population of all countries, every one liter increase in alcohol consumption cases the GDP_pct to increase by 0.2937%. The pop_c:lit_c coefficient means that the slope of liters consumed changes by 4.5e-10 for every 1 person change in population.
+R-squared is the proportion of variance in the outcome explained by the model - according to this regression, it is 16.96%. Now I'll make a graph to visualize this model.
+
+```{r}
+fit2<-lm(GDP_pct ~ pop_c * lit_c, data=project2na)
+new1<-project2na
+new1$pop_c<-mean(project2na$pop_c)
+new1$mean<-predict(fit2,new1)
+new1$pop_c<-mean(project2na$pop_c)+sd(project2na$pop_c)
+new1$plus.sd<-predict(fit2,new1)
+new1$pop_c<-mean(project2na$pop_c)-sd(project2na$pop_c)
+new1$minus.sd<-predict(fit2,new1)
+newint<-new1%>%dplyr::select(GDP_pct,lit_c,mean,plus.sd,minus.sd)%>%gather(liters,value,-GDP_pct,-lit_c)
+
+mycols<-c("#619CFF","#F8766D","#00BA38")
+names(mycols)<-c("-1 sd","mean","+1 sd")
+mycols=as.factor(mycols)
+
+ggplot(project2na,aes(lit_c,GDP_pct),group=mycols)+geom_point()+geom_line(data=new1,aes(y=mean,color="mean"))+geom_line(data=new1,aes(y=plus.sd,color="+1 sd"))+geom_line(data=new1,aes(y=minus.sd,color="-1 sd"))+scale_color_manual(values=mycols)+labs(color="Population (cont)")+theme(legend.position=c(.9,.2))
+```
+
+Now I'm going to check assumptions of linearity, normality, and homoskedasticity.
+
+```{r}
+project2na%>%ggplot()+geom_point(aes(population,GDP_pct))
+project2na%>%ggplot()+geom_point(aes(population,GDP_pct))+scale_x_continuous(lim=c(0,250000000))
+project2na%>%ggplot()+geom_point(aes(liters,GDP_pct))
+
+resids<-fit1$residuals
+shapiro.test(resids)
+
+library(sandwich); library(lmtest) #homoskedasticity
+bptest(fit1)
+```
+I made the population vs GDP_pct graph twice with two different limits for the x-axis. Since India and China have such high populations, the graph is not readable when they are included - to fix this, I created a second graph that leaves these points out so that it could be analyzed more easily. That being said, the linearity assumption is not met on population vs GDP_pct. The linearity assumption seems somewhat met for liters vs GDP_pct. The Shapiro-Wilk test was miserably failed - I rejected the null that the data is normal. Finally, the p-value of the Breusch-Pagan test is above 0.05 so I will fail to reject the null that the data is homoskedastic. Next, I'm going to rerun the regression with robust standard errors.
+
+```{r}
+coeftest(fit1, vcov = vcovHC(fit1))[,1:2]
+```
+
+The coefficient estimates have not noticably changed. The standard errors have all increased - this could have solved an issue of heteroskedasticity if necessary, but the Breusch-Pagan test from before showed that heteroskedasticity was not a problem in this data.
+
+Now I'm going to run the regression with bootstrapped standard errors.
+```{r}
+samp_distn<-replicate(5000, {
+  boot_dat<-project2na[sample(nrow(project2na),replace=TRUE),]
+  fit<-lm(GDP_pct~population*liters,data=boot_dat)
+  coef(fit)
+})
+## Estimated SEs
+samp_distn%>%t%>%as.data.frame%>%summarize_all(sd)
+```
+The standard errors are slightly higher than the robust standard errors, which are a little higher than the original standard errors.
+
+Finally, I'm going to run the regression without interaction.
+```{r}
+fit<-lm(GDP_pct ~ pop_c+lit_c, data=project2na)
+summary(fit)
+```
+
+##Logistic Regression
+
+
+```{r}
+fit<-glm(consumption~population+GDP_pct,data=project2na)
+summary(fit)
+```
+The population coefficient means that for every increase of 1, the logodds of having high alcohol consumption increase by 2.367e-10. The GDP_pct coefficient means that for every increase of 1, the logodds increase by 0.06278. The intercept means that the logodds of having high consumption start at 0.05365 when the population and percentage of GDP spent on healthcare are equal to zero. 
+
+###Confusion Matrix
+```{r}
+project2na$prob<-predict(fit,type="response")
+table(predict=as.numeric(project2na$prob>.5),truth=project2na$consumption)%>%addmargins
+```
+The confusion matrix will be used to compute accuracy, sensitivity, specificity, and precision.
+```{r}
+(129+204)/492 #accuracy
+129/231 #sensitivity
+204/261 #specificity
+129/186 #precision
+```
+Accuracy is 0.677, sensitivity is 0.558, specificity is 0.782, and precision is 0.694.
+
+Now I'm going to plot logit against consumption outcome.
+```{r}
+project2na$logit<-predict(fit) #get predicted log-odds
+project2na$outcome<-factor(project2na$consumption,levels=c("0","1"))
+ggplot(project2na,aes(logit, fill=outcome))+geom_density(alpha=.3)+scale_fill_discrete(labels=c("low","high"))
+```
+
+Again, 0 refers to low alcohol consumption and 1 refers to high consumption. Now I'm going to make an ROC curve and find the area underneath the curve.
+```{r}
+library(plotROC)
+ROCplot<-ggplot(project2na)+geom_roc(aes(d=consumption,m=prob), n.cuts=0)
+ROCplot
+calc_auc(ROCplot)
+
+```
+
+The AUC is decent at 0.742. Next, I'm going to run a 10-fold CV.
+
+```{r}
+class_diag<-function(probs,truth){
+
+tab<-table(factor(probs>.5,levels=c("FALSE","TRUE")),truth)
+acc=sum(diag(tab))/sum(tab)
+sens=tab[2,2]/colSums(tab)[2]
+spec=tab[1,1]/colSums(tab)[1]
+ppv=tab[2,2]/rowSums(tab)[2]
+
+if(is.numeric(truth)==FALSE & is.logical(truth)==FALSE) truth<-as.numeric(truth)-1
+
+#CALCULATE EXACT AUC
+ord<-order(probs, decreasing=TRUE)
+probs <- probs[ord]; truth <- truth[ord]
+
+TPR=cumsum(truth)/max(1,sum(truth)) 
+FPR=cumsum(!truth)/max(1,sum(!truth))
+
+dup<-c(probs[-1]>=probs[-length(probs)], FALSE)
+TPR<-c(0,TPR[!dup],1); FPR<-c(0,FPR[!dup],1)
+
+n <- length(TPR)
+auc<- sum( ((TPR[-1]+TPR[-n])/2) * (FPR[-1]-FPR[-n]) )
+
+data.frame(acc,sens,spec,ppv,auc)
+}
+
+set.seed(1234)
+k=10
+
+data1<-project2na[sample(nrow(project2na)),]
+folds<-cut(seq(1:nrow(project2na)),breaks=k,labels=F)
+
+diags<-NULL
+for(i in 1:k){
+train<-data1[folds!=i,]
+test<-data1[folds==i,]
+truth<-test$consumption
+
+fit<- glm(consumption~population+GDP_pct,data=project2na)
+probs<- predict(fit,newdata=test,test="prob")
+
+diags<-rbind(diags,class_diag(probs,truth)) 
+}
+
+apply(diags, 2, mean)
+```
+
+Average out-of-sample accuracy is 0.677, sensitivity is 0.553, specificity is 0.782, and precision is 0.683. These are only slightly lower than the numbers calculated from the confusion matrix earlier. 
+
+##LASSO
+
+Finally, I'm going to run a lasso. I'm going to use the consumption variable as the response. 
+
+```{r}
+library(glmnet)
+fit <- glm(consumption ~ -1 + country+liters+type+servings+GDP_pct+region+population, data = project2na,
+    family = "binomial")
+x <- model.matrix(fit)
+x <- scale(x)
+y <- as.matrix(project2na$consumption)
+cv <- cv.glmnet(x, y, family = "binomial")
+lasso <- glmnet(x, y, family = "binomial", lambda = cv$lambda.1se)
+coef(lasso)
+```
+
+The variables that are retained are Albania, Angola, Armenia, Bolivia, Botswana, Burkina Faso, Cabo Verde, Cameroon, China, Colombia, Costa Rica, Cote d'Ivoire, Cuba, Dominican Republic, Ecuador, Equatorial Guinea, Georgia, Haiti, Honduras, Jamaica, Liberia, Mexico, Mongolia, Nicaragua, Peru, Philippines, Seychelles, Suriname, Tanzania, Zimbabwe, and liters. I'm going to run a 10-fold CV using these variables.
+
+```{r}
+project2na$Albania <- ifelse(project2na$country == "Albania", 1, 0)
+project2na$Angola <- ifelse(project2na$country == "Angola", 1, 0)
+project2na$Armenia<- ifelse(project2na$country == "Armenia", 1, 0)
+project2na$Boliva <- ifelse(project2na$country == "Bolivia", 1, 0)
+project2na$Botswana <- ifelse(project2na$country == "Botswana", 1, 0)
+project2na$Burkina <- ifelse(project2na$country == "Burkina Faso", 1, 0)
+project2na$Cabo <- ifelse(project2na$country == "Cabo Verde", 1, 0)
+project2na$Cameroon <- ifelse(project2na$country == "Cameroon", 1, 0)
+project2na$China <- ifelse(project2na$country == "China", 1, 0)
+project2na$Liberia <- ifelse(project2na$country == "Liberia", 1, 0)
+project2na$Mexico <- ifelse(project2na$country == "Mexico", 1, 0)
+project2na$Mongolia <- ifelse(project2na$country == "Mongolia", 1, 0)
+project2na$Nicaragua <- ifelse(project2na$country == "Nicaragua", 1, 0)
+project2na$Peru <- ifelse(project2na$country == "Peru", 1, 0)
+project2na$Philippines <- ifelse(project2na$country == "Philippines", 1, 0)
+project2na$Seychelles <- ifelse(project2na$country == "Seychelles", 1, 0)
+project2na$Suriname <- ifelse(project2na$country == "Suriname", 1, 0)
+project2na$Tanzania <- ifelse(project2na$country == "Tanzania", 1, 0)
+project2na$Zimbabwe <- ifelse(project2na$country == "Zimbabwe", 1, 0)
+
+set.seed(1234)
+k=10
+
+data1<-project2na[sample(nrow(project2na)),]
+folds<-cut(seq(1:nrow(project2na)),breaks=k,labels=F)
+
+diags<-NULL
+for(i in 1:k){
+train<-data1[folds!=i,]
+test<-data1[folds==i,]
+truth<-test$consumption
+
+fit<- glm(consumption~-1+Albania+Angola+Armenia+Boliva+Botswana+Burkina+Cabo+Cameroon+China+Liberia+Mexico+Mongolia+Nicaragua+Peru+Philippines+Seychelles+Suriname+Tanzania+Zimbabwe,data=project2na)
+probs<- predict(fit,newdata=test,test="prob")
+
+diags<-rbind(diags,class_diag(probs,truth)) 
+}
+
+apply(diags, 2, mean)
+```
+
+The accuracy is 0.591, lower than the accuracy for the 10-fold CV done earlier. Using just population and GDP_pct must have been better for predicting consumption.

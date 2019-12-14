@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Nicolette Mojica" />
+    <meta name="description" content="Welcome, friends!">
+    <link rel="shortcut icon" type="image/x-icon" href="/img/favicon.ico">
+    <title>Project 1 - NSM724</title>
+    <meta name="generator" content="Hugo 0.60.1" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="/css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old" />
+    
+    <!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    
+  </head>
+
+  <body>
+    <div id="wrap">
+
+      
+      <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="/"><i class="fa fa-home"></i></a>
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="navbar-collapse collapse" id="navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+        <li><a href="/blog/">BLOG</a></li>
+        
+        <li><a href="/projects/">PROJECTS</a></li>
+        
+        <li><a href="/resume/">RESUME</a></li>
+        
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+
+      
+      <div class="container">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="/project1/">Project 1 - NSM724</a></strong>
+          </h3>
+        </div>
+        <div class="blog-title">
+          <h4>
+          October 21, 2019
+            &nbsp;&nbsp;
+            
+          </h4>
+        </div>
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>This project focuses on two datasets named “drinks” and “healthgdp”. “drinks” is a dataset from fivethirtyeight which gives liters and servings of alcohol consumption per capita in every country. “healthgdp” contains data released by the World Health Organization which gives info about the percentage of the yearly GDP that is spent on healthcare in every country. It also assigns each country to a region. I will be joining these datasets and analyzing the data in the hopes of seeing the habits of alcohol consumption in each region. I am also interested to see if there will be an association between percentage of GDP spent on healthcare and total alcohol consumption.</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ───────────────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
+<pre><code>## ✓ ggplot2 3.2.1     ✓ purrr   0.3.3
+## ✓ tibble  2.1.3     ✓ dplyr   0.8.3
+## ✓ tidyr   1.0.0     ✓ stringr 1.4.0
+## ✓ readr   1.3.1     ✓ forcats 0.4.0</code></pre>
+<pre><code>## ── Conflicts ──────────────────────────────────────────────── tidyverse_conflicts() ──
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(fivethirtyeight)
+
+library(readxl)
+healthgdp &lt;- read_excel(&quot;~/Desktop/gdp data2.xlsx&quot;)</code></pre>
+<p>Here is a preview of the datasets.</p>
+<pre class="r"><code>head(drinks)</code></pre>
+<pre><code>## # A tibble: 6 x 5
+##   country      beer_servings spirit_servings wine_servings total_litres_of_pure…
+##   &lt;chr&gt;                &lt;int&gt;           &lt;int&gt;         &lt;int&gt;                 &lt;dbl&gt;
+## 1 Afghanistan              0               0             0                   0  
+## 2 Albania                 89             132            54                   4.9
+## 3 Algeria                 25               0            14                   0.7
+## 4 Andorra                245             138           312                  12.4
+## 5 Angola                 217              57            45                   5.9
+## 6 Antigua &amp; B…           102             128            45                   4.9</code></pre>
+<pre class="r"><code>head(healthgdp)</code></pre>
+<pre><code>## # A tibble: 6 x 3
+##   country     GDP_pct region                   
+##   &lt;chr&gt;         &lt;dbl&gt; &lt;chr&gt;                    
+## 1 Aruba         NA    Latin America &amp; Caribbean
+## 2 Afghanistan    8.57 South Asia               
+## 3 Angola         2.74 Sub-Saharan Africa       
+## 4 Albania        5.01 Europe &amp; Central Asia    
+## 5 Andorra        9.45 Europe &amp; Central Asia    
+## 6 Arab World     3.99 &lt;NA&gt;</code></pre>
+</div>
+<div id="tidying" class="section level2">
+<h2>Tidying</h2>
+<p>The “drinks” dataset is not tidy so the pivot_longer function will be used on it. The servings columns are actually values of a variable - type of alcohol. A new column called “type” will be created in order to indicate this. The original values of those columns will be placed in a column called “servings”. Before doing all of this, the original column titles will be changed in order to be more clear.</p>
+<pre class="r"><code>drinks&lt;-drinks%&gt;%rename(
+    beer = beer_servings,
+    wine = wine_servings,
+    spirit = spirit_servings
+    )
+drinks&lt;-pivot_longer(drinks,c(&quot;beer&quot;,&quot;spirit&quot;,&quot;wine&quot;),names_to = &quot;type&quot;,values_to = &quot;servings&quot;)
+head(drinks)</code></pre>
+<pre><code>## # A tibble: 6 x 4
+##   country     total_litres_of_pure_alcohol type   servings
+##   &lt;chr&gt;                              &lt;dbl&gt; &lt;chr&gt;     &lt;int&gt;
+## 1 Afghanistan                          0   beer          0
+## 2 Afghanistan                          0   spirit        0
+## 3 Afghanistan                          0   wine          0
+## 4 Albania                              4.9 beer         89
+## 5 Albania                              4.9 spirit      132
+## 6 Albania                              4.9 wine         54</code></pre>
+</div>
+<div id="joining" class="section level2">
+<h2>Joining</h2>
+<p>Now that both datasets are tidy, they can be joined. I am using a left join with “drinks” on the left because the “healthgdp” dataset contains several “country” values that are not actually countries, but regions or economic groupings. Other than that, no other rows should be dropped. There are some countries in the “drinks” dataset that do not appear in the “healthgdp” dataset so there are a handful of NA cases. The full dataset will be named “project1”.</p>
+<pre class="r"><code>project1&lt;-left_join(drinks,healthgdp)</code></pre>
+<pre><code>## Joining, by = &quot;country&quot;</code></pre>
+<pre class="r"><code>head(project1)</code></pre>
+<pre><code>## # A tibble: 6 x 6
+##   country    total_litres_of_pure_alc… type   servings GDP_pct region           
+##   &lt;chr&gt;                          &lt;dbl&gt; &lt;chr&gt;     &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;            
+## 1 Afghanist…                       0   beer          0    8.57 South Asia       
+## 2 Afghanist…                       0   spirit        0    8.57 South Asia       
+## 3 Afghanist…                       0   wine          0    8.57 South Asia       
+## 4 Albania                          4.9 beer         89    5.01 Europe &amp; Central…
+## 5 Albania                          4.9 spirit      132    5.01 Europe &amp; Central…
+## 6 Albania                          4.9 wine         54    5.01 Europe &amp; Central…</code></pre>
+</div>
+<div id="wrangling" class="section level2">
+<h2>Wrangling</h2>
+<p>It’s time to see some summary statistics. For the sake of simplicity, any NA rows will be removed from here on out. I wanted the full dataset to contain every country which is why I didn’t do an inner join earlier. Now that we are looking at statistics, however, it is necessary to remove the NA rows.</p>
+<pre class="r"><code>project1&lt;-project1%&gt;%na.omit
+project1%&gt;%group_by(region)%&gt;%summarise(mean_GDP=mean(GDP_pct),sd_GDP=sd(GDP_pct))%&gt;%arrange(mean_GDP)</code></pre>
+<pre><code>## # A tibble: 7 x 3
+##   region                     mean_GDP sd_GDP
+##   &lt;chr&gt;                         &lt;dbl&gt;  &lt;dbl&gt;
+## 1 South Asia                     4.72   2.37
+## 2 Middle East &amp; North Africa     4.86   2.02
+## 3 Sub-Saharan Africa             5.86   2.53
+## 4 East Asia &amp; Pacific            6.44   4.36
+## 5 Latin America &amp; Caribbean      6.73   1.52
+## 6 Europe &amp; Central Asia          7.70   2.30
+## 7 North America                 10.6    0</code></pre>
+<pre class="r"><code>project1%&gt;%summarise(max_GDP=max(GDP_pct),min_GDP=min(GDP_pct),max_liters=max(total_litres_of_pure_alcohol),min_liters=min(total_litres_of_pure_alcohol),max_servings=max(servings),min_servings=min(servings))</code></pre>
+<pre><code>## # A tibble: 1 x 6
+##   max_GDP min_GDP max_liters min_liters max_servings min_servings
+##     &lt;dbl&gt;   &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;        &lt;int&gt;        &lt;int&gt;
+## 1    19.3    1.43       14.4          0          438            0</code></pre>
+<p>I’ve calculated the mean percentage of GDP spent on healthcare in each region. North America appears to be spending the most by far. I’ve also found the maximum and minimum of each numeric variable in order to get an idea of the range of this data.</p>
+<p>Next, I’m going to see the mean and standard deviation of servings and liters of alcohol consumed in each region. For servings I’m also grouping by type of alcohol. I’m arranging from highest to lowest consumption so I can get an idea of how much alcohol each region consumes.</p>
+<pre class="r"><code>project1%&gt;%group_by(region,type)%&gt;%summarise(mean_servings=mean(servings),sd_servings=sd(servings))%&gt;%arrange(desc(mean_servings))</code></pre>
+<pre><code>## # A tibble: 21 x 4
+## # Groups:   region [7]
+##    region                    type   mean_servings sd_servings
+##    &lt;chr&gt;                     &lt;chr&gt;          &lt;dbl&gt;       &lt;dbl&gt;
+##  1 North America             beer           240          NA  
+##  2 Europe &amp; Central Asia     beer           188.        106. 
+##  3 Latin America &amp; Caribbean spirit         145.        102. 
+##  4 Latin America &amp; Caribbean beer           144.         71.7
+##  5 Europe &amp; Central Asia     wine           132.        103. 
+##  6 Europe &amp; Central Asia     spirit         131.         82.5
+##  7 North America             spirit         122          NA  
+##  8 North America             wine           100          NA  
+##  9 East Asia &amp; Pacific       beer            73.6        78.1
+## 10 Sub-Saharan Africa        beer            70.4        88.4
+## # … with 11 more rows</code></pre>
+<pre class="r"><code>project1%&gt;%group_by(region)%&gt;%
+  summarise(mean_liters=mean(total_litres_of_pure_alcohol),sd_liters=sd(total_litres_of_pure_alcohol))%&gt;%
+  arrange(desc(mean_liters))</code></pre>
+<pre><code>## # A tibble: 7 x 3
+##   region                     mean_liters sd_liters
+##   &lt;chr&gt;                            &lt;dbl&gt;     &lt;dbl&gt;
+## 1 Europe &amp; Central Asia            8.28      3.74 
+## 2 North America                    8.2       0    
+## 3 Latin America &amp; Caribbean        5.83      2.24 
+## 4 Sub-Saharan Africa               3.42      2.75 
+## 5 East Asia &amp; Pacific              2.92      2.98 
+## 6 Middle East &amp; North Africa       1.36      1.61 
+## 7 South Asia                       0.625     0.939</code></pre>
+<p>I wonder if there is a correlation between healthcare spending and alcohol consumption. For the next part, I am going to create a new column that represents total servings of alcohol per person and then see if there is a correlation between that and healthcare spending. I’ll do the same with total liters of alcohol. Finally, I’ll see how strong the correlation between liters of alcohol consumed and servings of alcohol consumed is.</p>
+<pre class="r"><code>project1&lt;-project1%&gt;%group_by(country)%&gt;%mutate(total_servings=sum(servings))%&gt;%ungroup(country)
+head(project1)</code></pre>
+<pre><code>## # A tibble: 6 x 7
+##   country   total_litres_of_pu… type  servings GDP_pct region     total_servings
+##   &lt;chr&gt;                   &lt;dbl&gt; &lt;chr&gt;    &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               &lt;int&gt;
+## 1 Afghanis…                 0   beer         0    8.57 South Asia              0
+## 2 Afghanis…                 0   spir…        0    8.57 South Asia              0
+## 3 Afghanis…                 0   wine         0    8.57 South Asia              0
+## 4 Albania                   4.9 beer        89    5.01 Europe &amp; …            275
+## 5 Albania                   4.9 spir…      132    5.01 Europe &amp; …            275
+## 6 Albania                   4.9 wine        54    5.01 Europe &amp; …            275</code></pre>
+<pre class="r"><code>project1%&gt;%select(total_litres_of_pure_alcohol,GDP_pct)%&gt;%cor</code></pre>
+<pre><code>##                              total_litres_of_pure_alcohol   GDP_pct
+## total_litres_of_pure_alcohol                    1.0000000 0.3977563
+## GDP_pct                                         0.3977563 1.0000000</code></pre>
+<pre class="r"><code>project1%&gt;%select(total_servings,GDP_pct)%&gt;%cor</code></pre>
+<pre><code>##                total_servings   GDP_pct
+## total_servings      1.0000000 0.3575527
+## GDP_pct             0.3575527 1.0000000</code></pre>
+<pre class="r"><code>project1%&gt;%select(total_litres_of_pure_alcohol,total_servings)%&gt;%cor</code></pre>
+<pre><code>##                              total_litres_of_pure_alcohol total_servings
+## total_litres_of_pure_alcohol                    1.0000000      0.9395312
+## total_servings                                  0.9395312      1.0000000</code></pre>
+<p>There is a small correlation between GDP and liters/servings of alcohol. There is a strong correlation between liters and servings of alcohol consumed which makes sense.</p>
+<p>Going back to the previous summary stats, I am wondering why the percent GDP spent on healthcare is so high in North America and why there are NAs for this row. I’m going to look at the individual healthcare spending for all North American countries to get a better idea.</p>
+<pre class="r"><code>project1%&gt;%filter(region==&quot;North America&quot;)%&gt;%select(country,GDP_pct)</code></pre>
+<pre><code>## # A tibble: 3 x 2
+##   country GDP_pct
+##   &lt;chr&gt;     &lt;dbl&gt;
+## 1 Canada     10.6
+## 2 Canada     10.6
+## 3 Canada     10.6</code></pre>
+<p>Uh oh, there is only one country in the North America region! After looking through the data, I have found that USA is not in the drinks dataset so it was dropped during the left join. Mexico is classified as Latin America so Canada is the only country representing North America. This has prompted me to see how many countries are in each region to make sure this isn’t happening to other regions I am studying</p>
+<pre class="r"><code>project1%&gt;%group_by(region)%&gt;%summarise(country_count=n_distinct(country))</code></pre>
+<pre><code>## # A tibble: 7 x 2
+##   region                     country_count
+##   &lt;chr&gt;                              &lt;int&gt;
+## 1 East Asia &amp; Pacific                   25
+## 2 Europe &amp; Central Asia                 46
+## 3 Latin America &amp; Caribbean             27
+## 4 Middle East &amp; North Africa            16
+## 5 North America                          1
+## 6 South Asia                             8
+## 7 Sub-Saharan Africa                    41</code></pre>
+<p>Luckily, all of the other regions have more than one country.</p>
+</div>
+<div id="visualization" class="section level2">
+<h2>Visualization</h2>
+<p>Now that I have done some summary statistics and am more familiar with the layout of the data, I’m going to make a couple plots.</p>
+<pre class="r"><code>project1%&gt;%ggplot(aes(total_litres_of_pure_alcohol,total_servings))+
+  xlab(&quot;Total Liters Consumed&quot;)+ylab(&quot;Total Servings Consumed&quot;)+
+  ggtitle(&quot;Total Alcohol Consumption by Region&quot;)+labs(color=&quot;Region&quot;)+
+  theme(legend.position = &quot;left&quot;)+
+  geom_point(aes(color=region))+
+  scale_y_continuous(breaks=c(0,100,200,300,400,500,600,700))+scale_color_hue(c=150)</code></pre>
+<p><img src="/project1_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p>For the most part, there is a very strong correlation between total liters of alcohol consumed and total servings consumed. By associating each region with a color, we can see that the majority of countries that do not follow this trend are in Sub-Saharan Africa. It seems that there are a lot of European/Central Asian countries consuming the most alcohol, while the Sub-Saharan African countries are consuming the fewest servings.</p>
+<pre class="r"><code>project1%&gt;%ggplot(aes(region,servings,fill=type))+
+  geom_bar(stat=&quot;summary&quot;,fun.y=&quot;mean&quot;,position = &quot;dodge&quot;)+
+  theme(axis.text.x = element_text(angle=45, hjust=1))+scale_fill_brewer(palette=&quot;Accent&quot;)+
+  xlab(&quot;Region&quot;)+ylab(&quot;Servings&quot;)+ggtitle(&quot;Alcohol Servings Consumed by Type and Region&quot;)+labs(fill=&quot;Type of Alcohol&quot;)</code></pre>
+<p><img src="/project1_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p>This graph shows the breakdown of the type of alcohol favored by members of each region. Typically, if there is a type of alcohol that dominates the others, it is beer as shown by North America, Europe &amp; Central Asia, and Sub-Saharan Africa. Wine also tends to be consumed at the lowest rate. North America, Europe &amp; Central Asia, and Latin America &amp; Caribbean appear to be consuming the most servings. This is consistent with the previous plot.</p>
+</div>
+<div id="dimensionality-reduction" class="section level2">
+<h2>Dimensionality Reduction</h2>
+<p>I’m going to run a PCA on this data. First, I’ll set it all up by scaling the numeric data and running princomp() to get some preliminary info.</p>
+<pre class="r"><code>proj1num&lt;-project1%&gt;%select_if(is.numeric)%&gt;%scale
+rownames(proj1num)&lt;-project1$country
+head(proj1num)</code></pre>
+<pre><code>##             total_litres_of_pure_alcohol    servings    GDP_pct total_servings
+## Afghanistan                  -1.24252689 -0.85058477  0.7380062     -1.1282319
+## Afghanistan                  -1.24252689 -0.85058477  0.7380062     -1.1282319
+## Afghanistan                  -1.24252689 -0.85058477  0.7380062     -1.1282319
+## Albania                       0.02653082  0.08725594 -0.5207003      0.1530105
+## Albania                       0.02653082  0.54036999 -0.5207003      0.1530105
+## Albania                       0.02653082 -0.28155782 -0.5207003      0.1530105</code></pre>
+<pre class="r"><code>proj1pca&lt;-princomp(proj1num)
+names(proj1pca)</code></pre>
+<pre><code>## [1] &quot;sdev&quot;     &quot;loadings&quot; &quot;center&quot;   &quot;scale&quot;    &quot;n.obs&quot;    &quot;scores&quot;   &quot;call&quot;</code></pre>
+<pre class="r"><code>summary(proj1pca, loadings=T)</code></pre>
+<pre><code>## Importance of components:
+##                           Comp.1    Comp.2     Comp.3     Comp.4
+## Standard deviation     1.6722356 0.9005397 0.57255802 0.23812509
+## Proportion of Variance 0.7005168 0.2031559 0.08212259 0.01420476
+## Cumulative Proportion  0.7005168 0.9036727 0.98579524 1.00000000
+## 
+## Loadings:
+##                              Comp.1 Comp.2 Comp.3 Comp.4
+## total_litres_of_pure_alcohol  0.566  0.104  0.458  0.678
+## servings                      0.507  0.274 -0.813       
+## GDP_pct                       0.314 -0.941 -0.125       
+## total_servings                0.569  0.171  0.338 -0.729</code></pre>
+<p>It seems like component 1 explains a high proportion of variance. Component 2 also explains a fair amount of variance. Let’s make sure these hunches are right by making a scree plot. From there I’ll decide how many components to use.</p>
+<pre class="r"><code>eigval&lt;-proj1pca$sdev^2
+varprop=round(eigval/sum(eigval),2)
+
+ggplot()+geom_bar(aes(y=varprop,x=1:4),stat=&quot;identity&quot;)+xlab(&quot;&quot;)+geom_path(aes(y=varprop,x=1:4))+
+  geom_text(aes(x=1:4,y=varprop,label=round(varprop,2)),vjust=1,col=&quot;white&quot;,size=5)+
+  scale_y_continuous(breaks=seq(0,.6,.2),labels = scales::percent)+
+  scale_x_continuous(breaks=1:10)</code></pre>
+<p><img src="/project1_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<p>It seems that the elbow of this graph is at the second component. The cumulative proportion of variance after this component is around 0.9 so that seems like a good place to cut off. I’ll include components 1 and 2 in my analysis. I’m going to pull up loadings again in order to interpret the components.</p>
+<pre class="r"><code>proj1pca$loadings</code></pre>
+<pre><code>## 
+## Loadings:
+##                              Comp.1 Comp.2 Comp.3 Comp.4
+## total_litres_of_pure_alcohol  0.566  0.104  0.458  0.678
+## servings                      0.507  0.274 -0.813       
+## GDP_pct                       0.314 -0.941 -0.125       
+## total_servings                0.569  0.171  0.338 -0.729
+## 
+##                Comp.1 Comp.2 Comp.3 Comp.4
+## SS loadings      1.00   1.00   1.00   1.00
+## Proportion Var   0.25   0.25   0.25   0.25
+## Cumulative Var   0.25   0.50   0.75   1.00</code></pre>
+<p>For component 1, all of the variables have the same sign and similar magnitude. Earlier, I found a slight correlation between percentage of GDP spent on healthcare and alcohol consumption so it makes sense that the first principle component would be dependent on strength of both of these. For example, a country that spends little money on healthcare and consumes a small amount of alcohol will have a high component 1 score. On component 2, all of the variables share a sign except for percentage of GDP spent on healthcare. It seems as though the trade-off between healthcare spending and alcohol consumption controls this component. For a score to have a higher magnitude on component 2, their healthcare spending must be either very high or very low compared to their alcohol consumption.</p>
+<pre class="r"><code>ggplot()+geom_point(aes(proj1pca$scores[,1], proj1pca$scores[,2]))+xlab(&quot;PC1&quot;)+ylab(&quot;PC2&quot;)</code></pre>
+<p><img src="/project1_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+<p>There are a few extreme points on PC2 - let’s investigate!</p>
+<pre class="r"><code>Name&lt;-project1$country
+proj1pca$scores%&gt;%as.data.frame%&gt;%cbind(Name,.)%&gt;%top_n(9,Comp.2)%&gt;%arrange(desc(Comp.2))</code></pre>
+<pre><code>##                 Name     Comp.1   Comp.2     Comp.3      Comp.4
+## 1              Gabon  2.2749047 2.421178 -1.2034316  0.11155651
+## 2  Equatorial Guinea  0.6317010 2.179787 -0.8353168  0.08646099
+## 3         Kazakhstan  1.1314784 1.892061 -0.7910905  0.06572209
+## 4  Equatorial Guinea -0.1222541 1.772069  0.3719743 -0.03741611
+## 5             Angola  0.6785210 1.730717 -0.7492416  0.09619788
+## 6 Russian Federation  3.1954530 1.717786 -0.6013129  0.03791555
+## 7              Gabon  0.9434521 1.701165  0.9285932 -0.10720518
+## 8            Grenada  4.0290554 1.690541 -1.5330735  0.12866362
+## 9           Thailand  1.1469403 1.676382 -1.0084485  0.07979529</code></pre>
+<pre class="r"><code>project1%&gt;%filter(country==&quot;Marshall Islands&quot;|country==&quot;Tuvalu&quot;)</code></pre>
+<pre><code>## # A tibble: 6 x 7
+##   country    total_litres_of_pu… type  servings GDP_pct region    total_servings
+##   &lt;chr&gt;                    &lt;dbl&gt; &lt;chr&gt;    &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;              &lt;int&gt;
+## 1 Marshall …                   0 beer         0    19.3 East Asi…              0
+## 2 Marshall …                   0 spir…        0    19.3 East Asi…              0
+## 3 Marshall …                   0 wine         0    19.3 East Asi…              0
+## 4 Tuvalu                       1 beer         6    15.7 East Asi…             56
+## 5 Tuvalu                       1 spir…       41    15.7 East Asi…             56
+## 6 Tuvalu                       1 wine         9    15.7 East Asi…             56</code></pre>
+<p>These points seem to refer to the Marshall Islands and Tuvalu. Upon further investigation, it seems that these two have very low alcohol consumption and high healthcare spending. This lines up with what I noted as the parameters for component 2. I’ll do this all again to see the bottom scorers for PC1.</p>
+<pre class="r"><code>proj1pca$scores%&gt;%as.data.frame%&gt;%cbind(Name,.)%&gt;%top_n(5,wt=desc(Comp.1))%&gt;%arrange(Comp.1)</code></pre>
+<pre><code>##          Name    Comp.1    Comp.2      Comp.3      Comp.4
+## 1 Timor-Leste -2.301783 1.1373655 -0.02291069 -0.03292566
+## 2 Timor-Leste -2.301783 1.1373655 -0.02291069 -0.03292566
+## 3 Timor-Leste -2.285742 1.1460403 -0.04859773 -0.03028997
+## 4     Myanmar -2.259431 0.9914512 -0.03337902 -0.03885818
+## 5     Myanmar -2.254084 0.9943428 -0.04194137 -0.03797962</code></pre>
+<pre class="r"><code>project1%&gt;%filter(country==&quot;France&quot;|country==&quot;Grenada&quot;|country==&quot;Germany&quot;|country==&quot;Andorra&quot;|country==&quot;Belarus&quot;)</code></pre>
+<pre><code>## # A tibble: 15 x 7
+##    country total_litres_of_pu… type   servings GDP_pct region     total_servings
+##    &lt;chr&gt;                 &lt;dbl&gt; &lt;chr&gt;     &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               &lt;int&gt;
+##  1 Andorra                12.4 beer        245    9.45 Europe &amp; …            695
+##  2 Andorra                12.4 spirit      138    9.45 Europe &amp; …            695
+##  3 Andorra                12.4 wine        312    9.45 Europe &amp; …            695
+##  4 Belarus                14.4 beer        142    5.66 Europe &amp; …            557
+##  5 Belarus                14.4 spirit      373    5.66 Europe &amp; …            557
+##  6 Belarus                14.4 wine         42    5.66 Europe &amp; …            557
+##  7 France                 11.8 beer        127   11.2  Europe &amp; …            648
+##  8 France                 11.8 spirit      151   11.2  Europe &amp; …            648
+##  9 France                 11.8 wine        370   11.2  Europe &amp; …            648
+## 10 Germany                11.3 beer        346   11.0  Europe &amp; …            638
+## 11 Germany                11.3 spirit      117   11.0  Europe &amp; …            638
+## 12 Germany                11.3 wine        175   11.0  Europe &amp; …            638
+## 13 Grenada                11.9 beer        199    6.09 Latin Ame…            665
+## 14 Grenada                11.9 spirit      438    6.09 Latin Ame…            665
+## 15 Grenada                11.9 wine         28    6.09 Latin Ame…            665</code></pre>
+<p>These countries have both high alcohol consumption and high healthcare spending. Once again, this matches the parameters that I noted for component 1.</p>
+<p>Lets look at another graph to explain the roles the variables play in both componenets.</p>
+<pre class="r"><code>proj1pca$loadings[1:4,1:2]%&gt;%as.data.frame%&gt;%rownames_to_column%&gt;%
+ggplot()+geom_hline(aes(yintercept=0),lty=2)+
+  geom_vline(aes(xintercept=0),lty=2)+ylab(&quot;PC2&quot;)+xlab(&quot;PC1&quot;)+
+  geom_segment(aes(x=0,y=0,xend=Comp.1,yend=Comp.2),arrow=arrow(),col=&quot;red&quot;)+
+  geom_label(aes(x=Comp.1*1.1,y=Comp.2*1.1,label=rowname))+expand_limits(x=-0.8)</code></pre>
+<p><img src="/project1_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
+<p>This graph simply confirms what I mentioned earlier. All of the variables contribute to PC1 in the same way - when any of these values is high, it contributes to a lower PC1 score. For PC2, the three alcohol variables are in opposition to the GDP_pct variable. When healthcare spending is high and alcohol consumption is low, there is a high PC2 score.</p>
+</div>
+
+              <hr>
+              <div class="related-posts">
+                <h5>Related Posts</h5>
+                
+              </div>
+            </div>
+          </div>
+          <hr>
+        <div class="disqus">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+
+    (function() {
+      
+      
+      if (window.location.hostname == "localhost")
+        return;
+
+      var disqus_shortname = '';
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+        </div>
+      </div>
+      
+    </div>
+
+    
+    <footer>
+  <div id="footer">
+    <div class="container">
+      <p class="text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io/">Hugo</a> and
+      <a href="http://www.github.com/nurlansu/hugo-sustain/">sustain</a> with ♥</p>
+    </div>
+  </div>
+</footer>
+<div class="footer"></div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="/js/docs.min.js"></script>
+<script src="/js/main.js"></script>
+
+<script src="/js/ie10-viewport-bug-workaround.js"></script>
+
+
+    
+  </body>
+</html>
