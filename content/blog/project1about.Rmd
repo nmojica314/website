@@ -1,0 +1,17 @@
+---
+title: "Project 1"
+author: "Nicolette Mojica"
+date: 2019-12-15T21:13:14-05:00
+categories: ["R"]
+tags: ["R Markdown", "data analysis", "project"]
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE)
+```
+
+#Project 1
+
+To conclude Unit I, I created an exploratory data analysis project. This project compared data about every country's alcohol consumption and the percentage of their GDP spent on health care. Follow the link below to see what I found!
+
+[Project 1](/Project1)

@@ -22,5 +22,16 @@ Project 1
  </description>
     </item>
     
+    <item>
+      <title>Project 1</title>
+      <link>/blog/project1about/</link>
+      <pubDate>Sun, 15 Dec 2019 21:13:14 -0500</pubDate>
+      
+      <guid>/blog/project1about/</guid>
+      <description> Project 1 To conclude Unit I, I created an exploratory data analysis project. This project compared data about every country’s alcohol consumption and the percentage of their GDP spent on health care. Follow the link below to see what I found!
+Project 1
+ </description>
+    </item>
+    
   </channel>
 </rss>
