@@ -1,0 +1,16 @@
+---
+title: "Project 2"
+author: "Nicolette Mojica"
+date: 2019-11-15T21:13:14-05:00
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Project 2
+
+After learning all about modeling in Unit 2, I created project 2. Project 2 expands on project 1, drawing together alcohol consumption and percentage of GDP spent on health care in every country. This project also looks at the population of each country. See below to learn about my findings.
+
+[Project 2](/Project2)

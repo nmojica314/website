@@ -1,0 +1,40 @@
+---
+title: "About Me"
+author: "Nicolette Mojica"
+date: "2019-12-15T22:55:05-04:00"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Biography
+
+Hi, I'm Nicolette! I'm a native Texan, originally from Houston but enjoying life in Austin. I'm a life-long dancer and a firm believer in the power of music and creative movement. I'm also a biology student at The University of Texas at Austin. Outside of that, I enjoy spending time in nature and going on adventures with my friends. Hook 'em!
+
+#Education
+
+####The University of Texas at Austin
+- 2016-2019
+- Biology BSA
+
+####Clear Brook High School
+ - 2012-2016
+
+#Experience
+
+####Substitute Teacher
+-2019 - present
+- Supervised students while their instructer was gone
+
+####UT CNS College Readiness Mentor
+- Summer 2019
+- Prepared incoming freshmen for their first year of college
+
+####Biology Scholars Program Mentor
+- 2017-2018
+- Gave wisdom to freshmen to help them succeed in their first year of college
+
+#Contact Me
+[github](https://github.com/nmojica314)

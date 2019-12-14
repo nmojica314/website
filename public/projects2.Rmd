@@ -1,0 +1,19 @@
+---
+title: "Projects"
+output: html_document
+date: "2019-12-15T22:55:05-04:00"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Projects
+
+[Project 1](/Project1)
+
+- Unit I data wrangling and exploratory analysis project
+
+[Project 2](/Project2)
+
+- Unit II modeling, inference, and prediction project

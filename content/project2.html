@@ -1,0 +1,726 @@
+---
+title: "Project 2 - NSM724"
+output: html_document
+date: "2019-11-27T22:55:05-04:00"
+---
+
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>I will be using the same dataset that I created for project 1 with the addition of a population variable. This is a dataset that compares countries’ alcohol consumption and percentage of GDP spent on healthcare, as well as their population. The “liters” variable shows the liters of pure alcohol consumed per capita for each country. The “type” and “servings” variables go together. The servings variable indicates the number of servings of a certain type of alcohol each country drinks per capita and the type variable indicates the type of alcohol that the servings variable is referring to. The GDP_pct variable shows the percentage of the GDP that a country spends on healthcare ever year. The region variable splits countries into these regions: East Asia and Pacific, Europe and Central Asia, Latin America and Carribbean, Middle East and North Africa, North America, South Asia, and Sub-Saharan Africa.</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ───────────────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
+<pre><code>## ✓ ggplot2 3.2.1     ✓ purrr   0.3.3
+## ✓ tibble  2.1.3     ✓ dplyr   0.8.3
+## ✓ tidyr   1.0.0     ✓ stringr 1.4.0
+## ✓ readr   1.3.1     ✓ forcats 0.4.0</code></pre>
+<pre><code>## ── Conflicts ──────────────────────────────────────────────── tidyverse_conflicts() ──
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(fivethirtyeight)
+library(readxl)
+healthgdp &lt;- read_excel(&quot;~/Desktop/gdp data2.xlsx&quot;)
+pop&lt;-read_excel(&quot;~/Desktop/country data.xls&quot;)
+drinks&lt;-drinks%&gt;%rename(
+    beer = beer_servings,
+    wine = wine_servings,
+    spirit = spirit_servings,
+    liters=total_litres_of_pure_alcohol
+    )
+drinks&lt;-pivot_longer(drinks,c(&quot;beer&quot;,&quot;spirit&quot;,&quot;wine&quot;),names_to = &quot;type&quot;,values_to = &quot;servings&quot;)
+project2&lt;-left_join(drinks,healthgdp)</code></pre>
+<pre><code>## Joining, by = &quot;country&quot;</code></pre>
+<pre class="r"><code>project2&lt;-left_join(project2,pop)</code></pre>
+<pre><code>## Joining, by = &quot;country&quot;</code></pre>
+<pre class="r"><code>head(project2)</code></pre>
+<pre><code>## # A tibble: 6 x 7
+##   country     liters type   servings GDP_pct region                population
+##   &lt;chr&gt;        &lt;dbl&gt; &lt;chr&gt;     &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                      &lt;dbl&gt;
+## 1 Afghanistan    0   beer          0    8.57 South Asia              29185507
+## 2 Afghanistan    0   spirit        0    8.57 South Asia              29185507
+## 3 Afghanistan    0   wine          0    8.57 South Asia              29185507
+## 4 Albania        4.9 beer         89    5.01 Europe &amp; Central Asia    2913021
+## 5 Albania        4.9 spirit      132    5.01 Europe &amp; Central Asia    2913021
+## 6 Albania        4.9 wine         54    5.01 Europe &amp; Central Asia    2913021</code></pre>
+<pre class="r"><code>project2%&gt;%summarise(mean(liters))</code></pre>
+<pre><code>## # A tibble: 1 x 1
+##   `mean(liters)`
+##            &lt;dbl&gt;
+## 1           4.72</code></pre>
+<p>The mean liters of alcohol consumed per capita is 4.717098 so I will create a new binary variable that distinguishes countries that drink more liters than the mean (high consumption) and countries that drink less than the mean (low consumption). Low consumption will be assigned a 0 and high consumption will be a 1.</p>
+<pre class="r"><code>project2&lt;-project2%&gt;%mutate(consumption=case_when(liters&lt;mean(liters) ~ &quot;low&quot;,
+                                                  liters&gt;mean(liters) ~ &quot;high&quot;))%&gt;%mutate(consumption=as_factor(consumption))%&gt;%mutate(consumption=as.numeric(consumption)-1)
+head(project2)</code></pre>
+<pre><code>## # A tibble: 6 x 8
+##   country    liters type  servings GDP_pct region         population consumption
+##   &lt;chr&gt;       &lt;dbl&gt; &lt;chr&gt;    &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               &lt;dbl&gt;       &lt;dbl&gt;
+## 1 Afghanist…    0   beer         0    8.57 South Asia       29185507           0
+## 2 Afghanist…    0   spir…        0    8.57 South Asia       29185507           0
+## 3 Afghanist…    0   wine         0    8.57 South Asia       29185507           0
+## 4 Albania       4.9 beer        89    5.01 Europe &amp; Cent…    2913021           1
+## 5 Albania       4.9 spir…      132    5.01 Europe &amp; Cent…    2913021           1
+## 6 Albania       4.9 wine        54    5.01 Europe &amp; Cent…    2913021           1</code></pre>
+</div>
+<div id="manova-and-anova" class="section level2">
+<h2>MANOVA and ANOVA</h2>
+<p>I’m going to test whether any of the numeric variables vary across region.</p>
+<pre class="r"><code>man1&lt;-manova(cbind(liters,servings,GDP_pct,population)~region, data=project2)
+summary(man1)</code></pre>
+<pre><code>##            Df Pillai approx F num Df den Df    Pr(&gt;F)    
+## region      6  0.604   14.377     24   1940 &lt; 2.2e-16 ***
+## Residuals 485                                            
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>It is significant so I will now run univariate ANOVAs to see which variables are significant and post-hoc t-tests to see which regions differ.</p>
+<pre class="r"><code>summary.aov(man1)</code></pre>
+<pre><code>##  Response liters :
+##              Df Sum Sq Mean Sq F value    Pr(&gt;F)    
+## region        6 3277.3  546.22  65.531 &lt; 2.2e-16 ***
+## Residuals   485 4042.7    8.34                      
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+##  Response servings :
+##              Df  Sum Sq Mean Sq F value    Pr(&gt;F)    
+## region        6 1326595  221099  34.644 &lt; 2.2e-16 ***
+## Residuals   485 3095248    6382                      
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+##  Response GDP_pct :
+##              Df Sum Sq Mean Sq F value    Pr(&gt;F)    
+## region        6  508.6  84.767  12.027 1.301e-12 ***
+## Residuals   485 3418.3   7.048                      
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+##  Response population :
+##              Df     Sum Sq    Mean Sq F value    Pr(&gt;F)    
+## region        6 9.7916e+17 1.6319e+17  8.5821 6.997e-09 ***
+## Residuals   485 9.2226e+18 1.9016e+16                      
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## 87 observations deleted due to missingness</code></pre>
+<pre class="r"><code>pairwise.t.test(project2$liters,project2$region,
+                p.adj=&quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  project2$liters and project2$region 
+## 
+##                            East Asia &amp; Pacific Europe &amp; Central Asia
+## Europe &amp; Central Asia      &lt; 2e-16             -                    
+## Latin America &amp; Caribbean  8.1e-10             6.7e-09              
+## Middle East &amp; North Africa 0.00367             &lt; 2e-16              
+## North America              0.00207             0.99497              
+## South Asia                 0.00076             &lt; 2e-16              
+## Sub-Saharan Africa         0.32415             &lt; 2e-16              
+##                            Latin America &amp; Caribbean Middle East &amp; North Africa
+## Europe &amp; Central Asia      -                         -                         
+## Latin America &amp; Caribbean  -                         -                         
+## Middle East &amp; North Africa 2.7e-16                   -                         
+## North America              0.16413                   8.2e-05                   
+## South Asia                 5.7e-14                   0.30844                   
+## Sub-Saharan Africa         3.0e-09                   6.5e-05                   
+##                            North America South Asia
+## Europe &amp; Central Asia      -             -         
+## Latin America &amp; Caribbean  -             -         
+## Middle East &amp; North Africa -             -         
+## North America              -             -         
+## South Asia                 2.3e-05       -         
+## Sub-Saharan Africa         0.00422       3.0e-05   
+## 
+## P value adjustment method: none</code></pre>
+<pre class="r"><code>pairwise.t.test(project2$servings,project2$region,
+                p.adj=&quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  project2$servings and project2$region 
+## 
+##                            East Asia &amp; Pacific Europe &amp; Central Asia
+## Europe &amp; Central Asia      &lt; 2e-16             -                    
+## Latin America &amp; Caribbean  1.2e-05             0.00029              
+## Middle East &amp; North Africa 0.07095             &lt; 2e-16              
+## North America              0.03023             0.91521              
+## South Asia                 0.03046             3.3e-14              
+## Sub-Saharan Africa         0.12501             &lt; 2e-16              
+##                            Latin America &amp; Caribbean Middle East &amp; North Africa
+## Europe &amp; Central Asia      -                         -                         
+## Latin America &amp; Caribbean  -                         -                         
+## Middle East &amp; North Africa 1.8e-08                   -                         
+## North America              0.33216                   0.00692                   
+## South Asia                 2.4e-07                   0.48558                   
+## Sub-Saharan Africa         1.4e-10                   0.51544                   
+##                            North America South Asia
+## Europe &amp; Central Asia      -             -         
+## Latin America &amp; Caribbean  -             -         
+## Middle East &amp; North Africa -             -         
+## North America              -             -         
+## South Asia                 0.00365       -         
+## Sub-Saharan Africa         0.01034       0.20149   
+## 
+## P value adjustment method: none</code></pre>
+<pre class="r"><code>pairwise.t.test(project2$GDP_pct,project2$region,
+                p.adj=&quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  project2$GDP_pct and project2$region 
+## 
+##                            East Asia &amp; Pacific Europe &amp; Central Asia
+## Europe &amp; Central Asia      0.00096             -                    
+## Latin America &amp; Caribbean  0.49368             0.00907              
+## Middle East &amp; North Africa 0.00139             3.9e-10              
+## North America              0.00867             0.06601              
+## South Asia                 0.00598             5.3e-07              
+## Sub-Saharan Africa         0.13982             3.8e-08              
+##                            Latin America &amp; Caribbean Middle East &amp; North Africa
+## Europe &amp; Central Asia      -                         -                         
+## Latin America &amp; Caribbean  -                         -                         
+## Middle East &amp; North Africa 0.00013                   -                         
+## North America              0.01454                   0.00034                   
+## South Asia                 0.00120                   0.83123                   
+## Sub-Saharan Africa         0.02297                   0.02700                   
+##                            North America South Asia
+## Europe &amp; Central Asia      -             -         
+## Latin America &amp; Caribbean  -             -         
+## Middle East &amp; North Africa -             -         
+## North America              -             -         
+## South Asia                 0.00036       -         
+## Sub-Saharan Africa         0.00261       0.05411   
+## 
+## P value adjustment method: none</code></pre>
+<pre class="r"><code>pairwise.t.test(project2$population,project2$region,
+                p.adj=&quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  project2$population and project2$region 
+## 
+##                            East Asia &amp; Pacific Europe &amp; Central Asia
+## Europe &amp; Central Asia      0.00093             -                    
+## Latin America &amp; Caribbean  0.00418             0.91364              
+## Middle East &amp; North Africa 0.00441             0.75376              
+## North America              0.53763             0.84641              
+## South Asia                 0.00019             1.5e-09              
+## Sub-Saharan Africa         0.00122             0.98830              
+##                            Latin America &amp; Caribbean Middle East &amp; North Africa
+## Europe &amp; Central Asia      -                         -                         
+## Latin America &amp; Caribbean  -                         -                         
+## Middle East &amp; North Africa 0.71080                   -                         
+## North America              0.86776                   0.78103                   
+## South Asia                 1.3e-08                   2.8e-08                   
+## Sub-Saharan Africa         0.92547                   0.74924                   
+##                            North America South Asia
+## Europe &amp; Central Asia      -             -         
+## Latin America &amp; Caribbean  -             -         
+## Middle East &amp; North Africa -             -         
+## North America              -             -         
+## South Asia                 0.04234       -         
+## Sub-Saharan Africa         0.84901       2.2e-09   
+## 
+## P value adjustment method: none</code></pre>
+<p>One MANOVA, 3 ANOVAs and 63 t-tests were performed, making for a total of 67 tests. The probability of type I error is this number multiplied by 0.05 or 3.35 and the alpha should be adjusted to 0.05/67 or 7.463e-4. After making this adjustment, all of the ANOVA tests are still significant, meaning that there is a difference in mean across regions for all three variables tested.</p>
+<p>For liters, there is a difference between Europe &amp; Central Asia and East Asia &amp; Pacific, Latin America &amp; Caribbean and East Asia &amp; Pacific, Latin America &amp; Caribbean and Europe &amp; Central Asia, Middle East &amp; North Africa and Europe &amp; Central Asia, Middle East &amp; North Africa and Latin America &amp; Caribbean, South Asia and Europe &amp; Central Asia, South Asia and Latin America &amp; Caribbean, Sub-Saharan Africa and Europe &amp; Central Asia, Sub-Saharan Africa and Latin America &amp; Caribbean, North America and Middle East &amp; North Africa, South Asia and North America, Sub-Saharan Africa and Middle East &amp; North Africa, and Sub-Saharan Africa and South Asia.</p>
+<p>For servings, there is a difference between Europe &amp; Central Asia and East Asia &amp; Pacific, Latin America &amp; Caribbean and East Asia &amp; Pacific, Latin America &amp; Caribbean and Europe &amp; Central Asia, Middle East &amp; North Africa and Europe &amp; Central Asia, Middle East &amp; North Africa and Latin America &amp; Caribbean, South Asia and Europe &amp; Central Asia, South Asia and Latin America &amp; Caribbean, Sub-Saharan Africa and Europe &amp; Central Asia, and Sub-Saharan Africa and Latin America &amp; Caribbean</p>
+<p>For GDP_pct, there is a difference between Middle East &amp; North Africa and Europe &amp; Central Asia, Middle East &amp; North Africa and Latin America &amp; Caribbean, South Asia and Europe &amp; Central Asia, Sub-Saharan Africa and Europe &amp; Central Asia, North America and Middle East &amp; North Africa, and South Asia and North America.</p>
+<p>For population, there is a diference between South Asia and East Asia &amp; Pacific, South Asia and Europe &amp; Central Asia, South Asia and Latin America &amp; Caribbean, South Asia and Middle East &amp; North Africa, and Sub-Saharan Africaa and South Asia. This makes sense since the population of India is so large.</p>
+<p>The assumptions for MANOVA may not have been met. Since I got this data from reputable sources, I trust that a random sample and independent observations were taken. However, the servings and liters variables are measuring the same thing in two different ways so they are highly correlated. This leads me to believe that the no multicollinearity and homogeneity of covariance assumptions have been broken. Since data was taken from every country, I am guessing that the normality assumption is met. The linear relationship assumption is also likely, due to the relationship between servings and liters.</p>
+</div>
+<div id="randomization-test" class="section level2">
+<h2>Randomization Test</h2>
+<p>I’m going to perform a randomized ANOVA to see if servings varies based on the region. The null hypothesis (H0) is that the means for servings are the same across all regions. The alternative hypothesis (HA) is that at least at least one regional mean is different.</p>
+<pre class="r"><code>summary(aov(servings~type,data=project2))</code></pre>
+<pre><code>##              Df  Sum Sq Mean Sq F value   Pr(&gt;F)    
+## type          2  311653  155827   19.18 8.64e-09 ***
+## Residuals   576 4680145    8125                     
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>obs_F&lt;-19.18 #actual test statistic
+
+Fs&lt;-replicate(5000,{
+  new&lt;-project2%&gt;%mutate(servings=sample(servings))
+  SSW&lt;- new%&gt;%group_by(type)%&gt;%summarize(SSW=sum((servings-mean(servings))^2))%&gt;%summarize(sum(SSW))%&gt;%pull
+  SSB&lt;- new%&gt;%mutate(mean=mean(servings))%&gt;%group_by(type)%&gt;%mutate(groupmean=mean(servings))%&gt;%
+    summarize(SSB=sum((mean-groupmean)^2))%&gt;%summarize(sum(SSB))%&gt;%pull
+  (SSB/2)/(SSW/57)
+}) #null distribution
+
+{hist(Fs, prob=T); abline(v = obs_F, col=&quot;red&quot;)}</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<pre class="r"><code>mean(Fs&gt;obs_F)</code></pre>
+<pre><code>## [1] 0</code></pre>
+<p>The line showing the actual F stat is way off the graph but it would be at 19.18. I’m rejecting the null and saying that at least one regional mean is different.</p>
+</div>
+<div id="linear-regression" class="section level2">
+<h2>Linear Regression</h2>
+<p>I’m going to build a linear regression model predicting percentage of GDP spent on healthcare based on country population and alcohol consumption by liters. First, I’ll actually build the model. I’m going to start by removing the NAs from the data.</p>
+<pre class="r"><code>project2na&lt;-na.omit(project2)
+project2na$pop_c &lt;- project2na$population - mean(project2na$population)
+project2na$lit_c&lt;-project2na$liters-mean(project2na$liters)
+fit1&lt;-lm(GDP_pct ~ pop_c*lit_c, data=project2na)
+summary(fit1)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = GDP_pct ~ pop_c * lit_c, data = project2na)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -5.3060 -1.8724 -0.2696  1.6487 14.0675 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  6.490e+00  1.164e-01  55.742   &lt;2e-16 ***
+## pop_c       -1.919e-09  9.387e-10  -2.044   0.0415 *  
+## lit_c        2.937e-01  3.056e-02   9.611   &lt;2e-16 ***
+## pop_c:lit_c  4.500e-10  4.603e-10   0.978   0.3287    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 2.577 on 488 degrees of freedom
+## Multiple R-squared:  0.1746, Adjusted R-squared:  0.1696 
+## F-statistic: 34.42 on 3 and 488 DF,  p-value: &lt; 2.2e-16</code></pre>
+<p>The pop_c coefficient means that for a country that drinks the mean liters of alcohol for every country, an increase in population by one person will cause the percentage of GDP spent on healthcare to decrease by 1.919e-09. The lit_c coefficient means that for a country with the mean population of all countries, every one liter increase in alcohol consumption cases the GDP_pct to increase by 0.2937%. The pop_c:lit_c coefficient means that the slope of liters consumed changes by 4.5e-10 for every 1 person change in population. R-squared is the proportion of variance in the outcome explained by the model - according to this regression, it is 16.96%. Now I’ll make a graph to visualize this model.</p>
+<pre class="r"><code>fit2&lt;-lm(GDP_pct ~ pop_c * lit_c, data=project2na)
+new1&lt;-project2na
+new1$pop_c&lt;-mean(project2na$pop_c)
+new1$mean&lt;-predict(fit2,new1)
+new1$pop_c&lt;-mean(project2na$pop_c)+sd(project2na$pop_c)
+new1$plus.sd&lt;-predict(fit2,new1)
+new1$pop_c&lt;-mean(project2na$pop_c)-sd(project2na$pop_c)
+new1$minus.sd&lt;-predict(fit2,new1)
+newint&lt;-new1%&gt;%dplyr::select(GDP_pct,lit_c,mean,plus.sd,minus.sd)%&gt;%gather(liters,value,-GDP_pct,-lit_c)
+
+mycols&lt;-c(&quot;#619CFF&quot;,&quot;#F8766D&quot;,&quot;#00BA38&quot;)
+names(mycols)&lt;-c(&quot;-1 sd&quot;,&quot;mean&quot;,&quot;+1 sd&quot;)
+mycols=as.factor(mycols)
+
+ggplot(project2na,aes(lit_c,GDP_pct),group=mycols)+geom_point()+geom_line(data=new1,aes(y=mean,color=&quot;mean&quot;))+geom_line(data=new1,aes(y=plus.sd,color=&quot;+1 sd&quot;))+geom_line(data=new1,aes(y=minus.sd,color=&quot;-1 sd&quot;))+scale_color_manual(values=mycols)+labs(color=&quot;Population (cont)&quot;)+theme(legend.position=c(.9,.2))</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p>Now I’m going to check assumptions of linearity, normality, and homoskedasticity.</p>
+<pre class="r"><code>project2na%&gt;%ggplot()+geom_point(aes(population,GDP_pct))</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<pre class="r"><code>project2na%&gt;%ggplot()+geom_point(aes(population,GDP_pct))+scale_x_continuous(lim=c(0,250000000))</code></pre>
+<pre><code>## Warning: Removed 6 rows containing missing values (geom_point).</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-8-2.png" width="672" /></p>
+<pre class="r"><code>project2na%&gt;%ggplot()+geom_point(aes(liters,GDP_pct))</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-8-3.png" width="672" /></p>
+<pre class="r"><code>resids&lt;-fit1$residuals
+shapiro.test(resids)</code></pre>
+<pre><code>## 
+##  Shapiro-Wilk normality test
+## 
+## data:  resids
+## W = 0.91938, p-value = 1.478e-15</code></pre>
+<pre class="r"><code>library(sandwich); library(lmtest) #homoskedasticity</code></pre>
+<pre><code>## Loading required package: zoo</code></pre>
+<pre><code>## 
+## Attaching package: &#39;zoo&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     as.Date, as.Date.numeric</code></pre>
+<pre class="r"><code>bptest(fit1)</code></pre>
+<pre><code>## 
+##  studentized Breusch-Pagan test
+## 
+## data:  fit1
+## BP = 7.3686, df = 3, p-value = 0.06103</code></pre>
+<p>I made the population vs GDP_pct graph twice with two different limits for the x-axis. Since India and China have such high populations, the graph is not readable when they are included - to fix this, I created a second graph that leaves these points out so that it could be analyzed more easily. That being said, the linearity assumption is not met on population vs GDP_pct. The linearity assumption seems somewhat met for liters vs GDP_pct. The Shapiro-Wilk test was miserably failed - I rejected the null that the data is normal. Finally, the p-value of the Breusch-Pagan test is above 0.05 so I will fail to reject the null that the data is homoskedastic. Next, I’m going to rerun the regression with robust standard errors.</p>
+<pre class="r"><code>coeftest(fit1, vcov = vcovHC(fit1))[,1:2]</code></pre>
+<pre><code>##                  Estimate   Std. Error
+## (Intercept)  6.489834e+00 1.178834e-01
+## pop_c       -1.919148e-09 5.130563e-10
+## lit_c        2.936787e-01 3.149097e-02
+## pop_c:lit_c  4.499826e-10 3.804661e-10</code></pre>
+<p>The coefficient estimates have not noticably changed. The standard errors have all increased - this could have solved an issue of heteroskedasticity if necessary, but the Breusch-Pagan test from before showed that heteroskedasticity was not a problem in this data.</p>
+<p>Now I’m going to run the regression with bootstrapped standard errors.</p>
+<pre class="r"><code>samp_distn&lt;-replicate(5000, {
+  boot_dat&lt;-project2na[sample(nrow(project2na),replace=TRUE),]
+  fit&lt;-lm(GDP_pct~population*liters,data=boot_dat)
+  coef(fit)
+})
+## Estimated SEs
+samp_distn%&gt;%t%&gt;%as.data.frame%&gt;%summarize_all(sd)</code></pre>
+<pre><code>##   (Intercept)  population     liters population:liters
+## 1   0.2307561 2.13579e-09 0.03437177      4.827584e-10</code></pre>
+<p>The standard errors are slightly higher than the robust standard errors, which are a little higher than the original standard errors.</p>
+<p>Finally, I’m going to run the regression without interaction.</p>
+<pre class="r"><code>fit&lt;-lm(GDP_pct ~ pop_c+lit_c, data=project2na)
+summary(fit)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = GDP_pct ~ pop_c + lit_c, data = project2na)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -5.3273 -1.8491 -0.3095  1.6505 14.1143 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  6.483e+00  1.162e-01  55.796  &lt; 2e-16 ***
+## pop_c       -2.388e-09  8.072e-10  -2.958  0.00325 ** 
+## lit_c        2.887e-01  3.013e-02   9.582  &lt; 2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 2.577 on 489 degrees of freedom
+## Multiple R-squared:  0.173,  Adjusted R-squared:  0.1696 
+## F-statistic: 51.15 on 2 and 489 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+<div id="logistic-regression" class="section level2">
+<h2>Logistic Regression</h2>
+<pre class="r"><code>fit&lt;-glm(consumption~population+GDP_pct,data=project2na)
+summary(fit)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = consumption ~ population + GDP_pct, data = project2na)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -1.2654  -0.3892  -0.2133   0.4162   0.8499  
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) 5.365e-02  5.421e-02   0.990    0.323    
+## population  2.367e-10  1.480e-10   1.600    0.110    
+## GDP_pct     6.278e-02  7.542e-03   8.324 8.54e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for gaussian family taken to be 0.2193972)
+## 
+##     Null deviance: 122.54  on 491  degrees of freedom
+## Residual deviance: 107.29  on 489  degrees of freedom
+## AIC: 654.93
+## 
+## Number of Fisher Scoring iterations: 2</code></pre>
+<p>The population coefficient means that for every increase of 1, the logodds of having high alcohol consumption increase by 2.367e-10. The GDP_pct coefficient means that for every increase of 1, the logodds increase by 0.06278. The intercept means that the logodds of having high consumption start at 0.05365 when the population and percentage of GDP spent on healthcare are equal to zero.</p>
+<div id="confusion-matrix" class="section level3">
+<h3>Confusion Matrix</h3>
+<pre class="r"><code>project2na$prob&lt;-predict(fit,type=&quot;response&quot;)
+table(predict=as.numeric(project2na$prob&gt;.5),truth=project2na$consumption)%&gt;%addmargins</code></pre>
+<pre><code>##        truth
+## predict   0   1 Sum
+##     0   204 102 306
+##     1    57 129 186
+##     Sum 261 231 492</code></pre>
+<p>The confusion matrix will be used to compute accuracy, sensitivity, specificity, and precision.</p>
+<pre class="r"><code>(129+204)/492 #accuracy</code></pre>
+<pre><code>## [1] 0.6768293</code></pre>
+<pre class="r"><code>129/231 #sensitivity</code></pre>
+<pre><code>## [1] 0.5584416</code></pre>
+<pre class="r"><code>204/261 #specificity</code></pre>
+<pre><code>## [1] 0.7816092</code></pre>
+<pre class="r"><code>129/186 #precision</code></pre>
+<pre><code>## [1] 0.6935484</code></pre>
+<p>Accuracy is 0.677, sensitivity is 0.558, specificity is 0.782, and precision is 0.694.</p>
+<p>Now I’m going to plot logit against consumption outcome.</p>
+<pre class="r"><code>project2na$logit&lt;-predict(fit) #get predicted log-odds
+project2na$outcome&lt;-factor(project2na$consumption,levels=c(&quot;0&quot;,&quot;1&quot;))
+ggplot(project2na,aes(logit, fill=outcome))+geom_density(alpha=.3)+scale_fill_discrete(labels=c(&quot;low&quot;,&quot;high&quot;))</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+<p>Again, 0 refers to low alcohol consumption and 1 refers to high consumption. Now I’m going to make an ROC curve and find the area underneath the curve.</p>
+<pre class="r"><code>library(plotROC)
+ROCplot&lt;-ggplot(project2na)+geom_roc(aes(d=consumption,m=prob), n.cuts=0)
+ROCplot</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+<pre class="r"><code>calc_auc(ROCplot)</code></pre>
+<pre><code>##   PANEL group       AUC
+## 1     1    -1 0.7422003</code></pre>
+<p>The AUC is decent at 0.742. Next, I’m going to run a 10-fold CV.</p>
+<pre class="r"><code>class_diag&lt;-function(probs,truth){
+
+tab&lt;-table(factor(probs&gt;.5,levels=c(&quot;FALSE&quot;,&quot;TRUE&quot;)),truth)
+acc=sum(diag(tab))/sum(tab)
+sens=tab[2,2]/colSums(tab)[2]
+spec=tab[1,1]/colSums(tab)[1]
+ppv=tab[2,2]/rowSums(tab)[2]
+
+if(is.numeric(truth)==FALSE &amp; is.logical(truth)==FALSE) truth&lt;-as.numeric(truth)-1
+
+#CALCULATE EXACT AUC
+ord&lt;-order(probs, decreasing=TRUE)
+probs &lt;- probs[ord]; truth &lt;- truth[ord]
+
+TPR=cumsum(truth)/max(1,sum(truth)) 
+FPR=cumsum(!truth)/max(1,sum(!truth))
+
+dup&lt;-c(probs[-1]&gt;=probs[-length(probs)], FALSE)
+TPR&lt;-c(0,TPR[!dup],1); FPR&lt;-c(0,FPR[!dup],1)
+
+n &lt;- length(TPR)
+auc&lt;- sum( ((TPR[-1]+TPR[-n])/2) * (FPR[-1]-FPR[-n]) )
+
+data.frame(acc,sens,spec,ppv,auc)
+}
+
+set.seed(1234)
+k=10
+
+data1&lt;-project2na[sample(nrow(project2na)),]
+folds&lt;-cut(seq(1:nrow(project2na)),breaks=k,labels=F)
+
+diags&lt;-NULL
+for(i in 1:k){
+train&lt;-data1[folds!=i,]
+test&lt;-data1[folds==i,]
+truth&lt;-test$consumption
+
+fit&lt;- glm(consumption~population+GDP_pct,data=project2na)
+probs&lt;- predict(fit,newdata=test,test=&quot;prob&quot;)
+
+diags&lt;-rbind(diags,class_diag(probs,truth)) 
+}
+
+apply(diags, 2, mean)</code></pre>
+<pre><code>##       acc      sens      spec       ppv       auc 
+## 0.6770612 0.5585191 0.7817435 0.6953253 0.7382419</code></pre>
+<p>Average out-of-sample accuracy is 0.677, sensitivity is 0.553, specificity is 0.782, and precision is 0.683. These are only slightly lower than the numbers calculated from the confusion matrix earlier.</p>
+</div>
+</div>
+<div id="lasso" class="section level2">
+<h2>LASSO</h2>
+<p>Finally, I’m going to run a lasso. I’m going to use the consumption variable as the response.</p>
+<pre class="r"><code>library(glmnet)</code></pre>
+<pre><code>## Loading required package: Matrix</code></pre>
+<pre><code>## 
+## Attaching package: &#39;Matrix&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:tidyr&#39;:
+## 
+##     expand, pack, unpack</code></pre>
+<pre><code>## Loaded glmnet 3.0-2</code></pre>
+<pre class="r"><code>fit &lt;- glm(consumption ~ -1 + country+liters+type+servings+GDP_pct+region+population, data = project2na,
+    family = &quot;binomial&quot;)</code></pre>
+<pre><code>## Warning: glm.fit: algorithm did not converge</code></pre>
+<pre class="r"><code>x &lt;- model.matrix(fit)
+x &lt;- scale(x)
+y &lt;- as.matrix(project2na$consumption)
+cv &lt;- cv.glmnet(x, y, family = &quot;binomial&quot;)
+lasso &lt;- glmnet(x, y, family = &quot;binomial&quot;, lambda = cv$lambda.1se)
+coef(lasso)</code></pre>
+<pre><code>## 177 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
+##                                            s0
+## (Intercept)                       0.637729613
+## countryAfghanistan                .          
+## countryAlbania                    0.378224264
+## countryAlgeria                    .          
+## countryAndorra                    .          
+## countryAngola                     0.112224869
+## countryArgentina                  .          
+## countryArmenia                   -0.264114721
+## countryAustralia                  .          
+## countryAustria                    .          
+## countryAzerbaijan                 .          
+## countryBahrain                    .          
+## countryBangladesh                 .          
+## countryBarbados                   0.005816327
+## countryBelarus                    .          
+## countryBelgium                    .          
+## countryBelize                     .          
+## countryBenin                      .          
+## countryBhutan                     .          
+## countryBolivia                   -0.264126379
+## countryBotswana                   0.245199355
+## countryBrazil                     .          
+## countryBulgaria                   .          
+## countryBurkina Faso              -0.397132605
+## countryBurundi                    0.005794029
+## countryCabo Verde                -0.317347303
+## countryCambodia                   .          
+## countryCameroon                   0.138779343
+## countryCanada                     .          
+## countryCentral African Republic   .          
+## countryChad                       .          
+## countryChile                      .          
+## countryChina                      0.351567553
+## countryColombia                  -0.370562316
+## countryComoros                    .          
+## countryCosta Rica                -0.423765108
+## countryCote d&#39;Ivoire             -0.317372986
+## countryCroatia                    .          
+## countryCuba                      -0.370575479
+## countryCyprus                     .          
+## countryCzech Republic             .          
+## countryDenmark                    .          
+## countryDjibouti                   .          
+## countryDominica                   .          
+## countryDominican Republic         0.032352078
+## countryEcuador                   -0.370587286
+## countryEl Salvador                .          
+## countryEquatorial Guinea          0.138737994
+## countryEritrea                    .          
+## countryEstonia                    .          
+## countryEthiopia                   .          
+## countryFiji                       .          
+## countryFinland                    .          
+## countryFrance                     .          
+## countryGabon                      .          
+## countryGeorgia                    0.245128799
+## countryGermany                    .          
+## countryGhana                      .          
+## countryGreece                     .          
+## countryGrenada                    .          
+## countryGuatemala                  .          
+## countryGuinea                     .          
+## countryGuinea-Bissau              .          
+## countryGuyana                     .          
+## countryHaiti                      0.112125883
+## countryHonduras                  -0.051420678
+## countryHungary                    .          
+## countryIceland                    .          
+## countryIndia                      .          
+## countryIndonesia                  .          
+## countryIraq                       .          
+## countryIreland                    .          
+## countryIsrael                     .          
+## countryItaly                      .          
+## countryJamaica                   -0.157820055
+## countryJapan                      .          
+## countryJordan                     .          
+## countryKazakhstan                 .          
+## countryKenya                      .          
+## countryKiribati                   .          
+## countryKuwait                     .          
+## countryLatvia                     .          
+## countryLebanon                    .          
+## countryLesotho                    .          
+## countryLiberia                   -0.078025412
+## countryLibya                      .          
+## countryLithuania                  .          
+## countryLuxembourg                 .          
+## countryMadagascar                 .          
+## countryMalawi                     .          
+## countryMalaysia                   .          
+## countryMaldives                   .          
+## countryMali                       .          
+## countryMalta                      .          
+## countryMarshall Islands           .          
+## countryMauritania                 .          
+## countryMauritius                  .          
+## countryMexico                     0.218508471
+## countryMoldova                    0.005707246
+## countryMonaco                     .          
+## countryMongolia                   0.378091010
+## countryMorocco                    .          
+## countryMozambique                 .          
+## countryMyanmar                    .          
+## countryNamibia                    .          
+## countryNauru                      .          
+## countryNepal                      .          
+## countryNetherlands                .          
+## countryNew Zealand                .          
+## countryNicaragua                 -0.184444028
+## countryNiger                      .          
+## countryNigeria                    .          
+## countryNorway                     .          
+## countryOman                       .          
+## countryPakistan                   .          
+## countryPalau                      .          
+## countryPanama                     .          
+## countryPapua New Guinea           .          
+## countryParaguay                   .          
+## countryPeru                       0.058890221
+## countryPhilippines               -0.477045739
+## countryPoland                     .          
+## countryPortugal                   .          
+## countryQatar                      .          
+## countryRomania                    .          
+## countryRussian Federation         .          
+## countryRwanda                     .          
+## countrySamoa                      .          
+## countrySan Marino                 .          
+## countrySaudi Arabia               .          
+## countrySenegal                    .          
+## countrySerbia                     .          
+## countrySeychelles                -0.344054510
+## countrySierra Leone               .          
+## countrySingapore                  .          
+## countrySlovenia                   .          
+## countrySolomon Islands            .          
+## countrySouth Africa               .          
+## countrySpain                      .          
+## countrySri Lanka                  .          
+## countrySt. Lucia                  .          
+## countrySudan                      .          
+## countrySuriname                   0.191871216
+## countrySweden                     .          
+## countrySwitzerland                .          
+## countryTajikistan                 .          
+## countryTanzania                   0.165265589
+## countryThailand                   .          
+## countryTimor-Leste                .          
+## countryTogo                       .          
+## countryTonga                      .          
+## countryTunisia                    .          
+## countryTurkey                     .          
+## countryTurkmenistan               .          
+## countryTuvalu                     .          
+## countryUganda                     .          
+## countryUkraine                    .          
+## countryUnited Arab Emirates       .          
+## countryUnited Kingdom             .          
+## countryUruguay                    .          
+## countryUzbekistan                 .          
+## countryVanuatu                    .          
+## countryVietnam                    .          
+## countryZambia                     .          
+## countryZimbabwe                  -0.503666643
+## liters                           13.206140062
+## typespirit                        .          
+## typewine                          .          
+## servings                          .          
+## GDP_pct                           .          
+## regionEurope &amp; Central Asia       .          
+## regionLatin America &amp; Caribbean   .          
+## regionMiddle East &amp; North Africa  .          
+## regionNorth America               .          
+## regionSouth Asia                  .          
+## regionSub-Saharan Africa          .          
+## population                        .</code></pre>
+<p>The variables that are retained are Albania, Angola, Armenia, Bolivia, Botswana, Burkina Faso, Cabo Verde, Cameroon, China, Colombia, Costa Rica, Cote d’Ivoire, Cuba, Dominican Republic, Ecuador, Equatorial Guinea, Georgia, Haiti, Honduras, Jamaica, Liberia, Mexico, Mongolia, Nicaragua, Peru, Philippines, Seychelles, Suriname, Tanzania, Zimbabwe, and liters. I’m going to run a 10-fold CV using these variables.</p>
+<pre class="r"><code>project2na$Albania &lt;- ifelse(project2na$country == &quot;Albania&quot;, 1, 0)
+project2na$Angola &lt;- ifelse(project2na$country == &quot;Angola&quot;, 1, 0)
+project2na$Armenia&lt;- ifelse(project2na$country == &quot;Armenia&quot;, 1, 0)
+project2na$Boliva &lt;- ifelse(project2na$country == &quot;Bolivia&quot;, 1, 0)
+project2na$Botswana &lt;- ifelse(project2na$country == &quot;Botswana&quot;, 1, 0)
+project2na$Burkina &lt;- ifelse(project2na$country == &quot;Burkina Faso&quot;, 1, 0)
+project2na$Cabo &lt;- ifelse(project2na$country == &quot;Cabo Verde&quot;, 1, 0)
+project2na$Cameroon &lt;- ifelse(project2na$country == &quot;Cameroon&quot;, 1, 0)
+project2na$China &lt;- ifelse(project2na$country == &quot;China&quot;, 1, 0)
+project2na$Liberia &lt;- ifelse(project2na$country == &quot;Liberia&quot;, 1, 0)
+project2na$Mexico &lt;- ifelse(project2na$country == &quot;Mexico&quot;, 1, 0)
+project2na$Mongolia &lt;- ifelse(project2na$country == &quot;Mongolia&quot;, 1, 0)
+project2na$Nicaragua &lt;- ifelse(project2na$country == &quot;Nicaragua&quot;, 1, 0)
+project2na$Peru &lt;- ifelse(project2na$country == &quot;Peru&quot;, 1, 0)
+project2na$Philippines &lt;- ifelse(project2na$country == &quot;Philippines&quot;, 1, 0)
+project2na$Seychelles &lt;- ifelse(project2na$country == &quot;Seychelles&quot;, 1, 0)
+project2na$Suriname &lt;- ifelse(project2na$country == &quot;Suriname&quot;, 1, 0)
+project2na$Tanzania &lt;- ifelse(project2na$country == &quot;Tanzania&quot;, 1, 0)
+project2na$Zimbabwe &lt;- ifelse(project2na$country == &quot;Zimbabwe&quot;, 1, 0)
+
+set.seed(1234)
+k=10
+
+data1&lt;-project2na[sample(nrow(project2na)),]
+folds&lt;-cut(seq(1:nrow(project2na)),breaks=k,labels=F)
+
+diags&lt;-NULL
+for(i in 1:k){
+train&lt;-data1[folds!=i,]
+test&lt;-data1[folds==i,]
+truth&lt;-test$consumption
+
+fit&lt;- glm(consumption~-1+Albania+Angola+Armenia+Boliva+Botswana+Burkina+Cabo+Cameroon+China+Liberia+Mexico+Mongolia+Nicaragua+Peru+Philippines+Seychelles+Suriname+Tanzania+Zimbabwe,data=project2na)
+probs&lt;- predict(fit,newdata=test,test=&quot;prob&quot;)
+
+diags&lt;-rbind(diags,class_diag(probs,truth)) 
+}
+
+apply(diags, 2, mean)</code></pre>
+<pre><code>##       acc      sens      spec       ppv       auc 
+## 0.5916327 0.1315299 1.0000000 1.0000000 0.5657649</code></pre>
+<p>The accuracy is 0.591, lower than the accuracy for the 10-fold CV done earlier. Using just population and GDP_pct must have been better for predicting consumption.</p>
+</div>

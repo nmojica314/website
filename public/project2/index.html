@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="author" content="Nicolette Mojica" />
-    <meta name="description" content="Welcome, friends!">
+    <meta name="description" content="hi">
     <link rel="shortcut icon" type="image/x-icon" href="/img/favicon.ico">
     <title>Project 2 - NSM724</title>
     <meta name="generator" content="Hugo 0.60.1" />
@@ -42,9 +42,9 @@
         
         <li><a href="/blog/">BLOG</a></li>
         
-        <li><a href="/projects/">PROJECTS</a></li>
+        <li><a href="/projects2">PROJECTS</a></li>
         
-        <li><a href="/resume/">RESUME</a></li>
+        <li><a href="/resume/">RESUME/ABOUT</a></li>
         
       
       </ul>
@@ -61,7 +61,7 @@
         </div>
         <div class="blog-title">
           <h4>
-          January 1, 0001
+          November 27, 2019
             &nbsp;&nbsp;
             
           </h4>
@@ -411,7 +411,7 @@ shapiro.test(resids)</code></pre>
 ## Estimated SEs
 samp_distn%&gt;%t%&gt;%as.data.frame%&gt;%summarize_all(sd)</code></pre>
 <pre><code>##   (Intercept)  population     liters population:liters
-## 1   0.2270939 2.18018e-09 0.03429775      5.029885e-10</code></pre>
+## 1   0.2307561 2.13579e-09 0.03437177      4.827584e-10</code></pre>
 <p>The standard errors are slightly higher than the robust standard errors, which are a little higher than the original standard errors.</p>
 <p>Finally, I’m going to run the regression without interaction.</p>
 <pre class="r"><code>fit&lt;-lm(GDP_pct ~ pop_c+lit_c, data=project2na)
