@@ -7,7 +7,7 @@
     <meta name="author" content="Nicolette Mojica" />
     <meta name="description" content="hi">
     <link rel="shortcut icon" type="image/x-icon" href="/img/favicon.ico">
-    <title>Blogs</title>
+    <title>Python Is Fun!</title>
     <meta name="generator" content="Hugo 0.60.1" />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="/css/main.css" />
@@ -24,6 +24,7 @@
 
   <body>
     <div id="wrap">
+
       
       <nav class="navbar navbar-default">
   <div class="container">
@@ -51,67 +52,78 @@
   </div>
 </nav>
 
+      
       <div class="container">
-        <h3>Archive</h3>
-          <div class="panel panel-default">
-            <div class="panel-body">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="/blog/pythonagain/">Python Is Fun!</a></strong>
+          </h3>
+        </div>
+        <div class="blog-title">
+          <h4>
+          December 15, 2019
+            &nbsp;&nbsp;
             
-              <div class="row">
-                <div class="col-sm-4 col-md-4 col-lg-4">
-                  <h5 style="text-align: right">
-                    December 15, 2019
-                  </h5>
-                 </div>
-                 <div class="col-sm-8 col-md-8 col-lg-8">
-                   <h5 style="text-align: left">
-                    <strong><a href="/blog/pythonblog/">Python Is Fun!</a></strong>
-                  </h5>
-                </div>
+          </h4>
+        </div>
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              
+
+
+<p>This semester I learned a little bit about Python. As a science person, it was cool to use Python to make DNA analysis a little easier. I wrote a small function to count k-mers that I’ve inserted below. It gives you back every possible k-mer, as well as the number of times it appears.</p>
+<pre class="python"><code>def count_kmers(sequence,k):
+    counts = {}
+    num_kmers = len(sequence) - k + 1
+    for i in range(num_kmers):
+        kmer = sequence[i:i+k]
+        if kmer not in counts:
+            counts[kmer] = 0
+        counts[kmer] += 1
+    return counts</code></pre>
+<p>Now we can use this function on a sequence. I’ll create a sequence and find all the 3-mers for it.</p>
+<pre class="python"><code>seq1 = &quot;AGGACTGACTTGACT&quot;
+count_kmers(seq1,3)</code></pre>
+<pre><code>## {&#39;CTT&#39;: 1, &#39;AGG&#39;: 1, &#39;TTG&#39;: 1, &#39;CTG&#39;: 1, &#39;GGA&#39;: 1, &#39;ACT&#39;: 3, &#39;GAC&#39;: 3, &#39;TGA&#39;: 2}</code></pre>
+<p>That was much easier than maually finding all of the k-mers and counting them. Woohoo!</p>
+<div class="figure">
+<img src="/Users/nicolettemojica/Desktop/website/static/img/dnapic.jpg" alt="DNA" />
+<p class="caption">DNA</p>
+</div>
+
+              <hr>
+              <div class="related-posts">
+                <h5>Related Posts</h5>
+                
               </div>
-            
-              <div class="row">
-                <div class="col-sm-4 col-md-4 col-lg-4">
-                  <h5 style="text-align: right">
-                    December 15, 2019
-                  </h5>
-                 </div>
-                 <div class="col-sm-8 col-md-8 col-lg-8">
-                   <h5 style="text-align: left">
-                    <strong><a href="/blog/pythonagain/">Python Is Fun!</a></strong>
-                  </h5>
-                </div>
-              </div>
-            
-              <div class="row">
-                <div class="col-sm-4 col-md-4 col-lg-4">
-                  <h5 style="text-align: right">
-                    December 15, 2019
-                  </h5>
-                 </div>
-                 <div class="col-sm-8 col-md-8 col-lg-8">
-                   <h5 style="text-align: left">
-                    <strong><a href="/blog/project1about/">Project 1</a></strong>
-                  </h5>
-                </div>
-              </div>
-            
-              <div class="row">
-                <div class="col-sm-4 col-md-4 col-lg-4">
-                  <h5 style="text-align: right">
-                    November 15, 2019
-                  </h5>
-                 </div>
-                 <div class="col-sm-8 col-md-8 col-lg-8">
-                   <h5 style="text-align: left">
-                    <strong><a href="/blog/project2about/">Project 2</a></strong>
-                  </h5>
-                </div>
-              </div>
-            
             </div>
           </div>
+          <hr>
+        <div class="disqus">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+
+    (function() {
+      
+      
+      if (window.location.hostname == "localhost")
+        return;
+
+      var disqus_shortname = '';
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+        </div>
       </div>
+      
     </div>
+
     
     <footer>
   <div id="footer">
@@ -133,5 +145,6 @@
 <script src="/js/ie10-viewport-bug-workaround.js"></script>
 
 
+    
   </body>
 </html>
