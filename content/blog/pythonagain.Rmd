@@ -1,0 +1,35 @@
+---
+title: "Python Is Fun!"
+author: "Nicolette Mojica"
+date: "2019-12-15T22:55:05-04:00"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This semester I learned a little bit about Python. As a science person, it was cool to use Python to make DNA analysis a little easier. I wrote a small function to count k-mers that I've inserted below. It gives you back every possible k-mer, as well as the number of times it appears.
+
+```{python}
+def count_kmers(sequence,k):
+    counts = {}
+    num_kmers = len(sequence) - k + 1
+    for i in range(num_kmers):
+        kmer = sequence[i:i+k]
+        if kmer not in counts:
+            counts[kmer] = 0
+        counts[kmer] += 1
+    return counts
+```
+
+Now we can use this function on a sequence. I'll create a sequence and find all the 3-mers for it.
+
+```{python}
+seq1 = "AGGACTGACTTGACT"
+count_kmers(seq1,3)
+```
+
+That was much easier than maually finding all of the k-mers and counting them. Woohoo!
+
+![DNA](~/Desktop/website/static/img/dnapic.jpg)
